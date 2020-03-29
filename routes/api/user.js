@@ -15,4 +15,8 @@ router.get('/user/all', (req, res) => {
   userController.get_users(req, res);
 });
 
+router.delete('/user/delete', (req, res) => {
+  userController.delete_user(req, res);
+});
+
 module.exports = router;

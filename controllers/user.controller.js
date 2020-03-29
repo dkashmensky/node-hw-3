@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const utils = require('../utils/utils');
 
 const User = mongoose.model('Users');
+const Truck = mongoose.model('Trucks');
+const Load = mongoose.model('Loads');
 
 module.exports.get_users = (req, res) => {
   User.find({}, (err, users) => {
@@ -104,4 +106,42 @@ module.exports.change_user_password = (req, res) => {
       });
     }
   );
+};
+
+module.exports.delete_user = (req, res) => {
+  User.findOneAndDelete({ id: req.user.id }, async (err, user) => {
+    if (err) {
+      res.status(500).json({
+        status: err,
+      });
+      return;
+    }
+
+    if (!user) {
+      res.status(500).json({
+        status: 'Unable to delete user',
+      });
+      return;
+    }
+
+    await Truck.deleteMany({ created_by: user.id }, error => {
+      if (error) {
+        res.status(500).json({
+          status: error,
+        });
+      }
+    });
+
+    await Load.deleteMany({ created_by: user.id }, error => {
+      if (error) {
+        res.status(500).json({
+          status: error,
+        });
+      }
+    });
+
+    res.status(200).json({
+      status: 'User deleted successfully',
+    });
+  });
 };

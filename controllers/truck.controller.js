@@ -5,6 +5,13 @@ const Truck = mongoose.model('Trucks');
 const TruckType = mongoose.model('Truck_types');
 
 module.exports.create_truck = (req, res) => {
+  if (req.user.type !== 'driver') {
+    res.status(400).json({
+      status: 'User is not a driver',
+    });
+    return;
+  }
+
   Truck.find({}, (err, trucks) => {
     if (err) {
       res.status(500).json({
@@ -58,6 +65,13 @@ module.exports.get_truck_types = (req, res) => {
 };
 
 module.exports.get_user_trucks = (req, res) => {
+  if (req.user.type !== 'driver') {
+    res.status(400).json({
+      status: 'User is not a driver',
+    });
+    return;
+  }
+
   Truck.find({ created_by: req.user.id }, (err, trucks) => {
     if (err) {
       res.status(500).json({
@@ -71,12 +85,26 @@ module.exports.get_user_trucks = (req, res) => {
 };
 
 module.exports.update_truck_info = (req, res) => {
-  Truck.find({ created_by: req.user.id }, (err, trucks) => {
+  if (req.user.type !== 'driver') {
+    res.status(400).json({
+      status: 'User is not a driver',
+    });
+    return;
+  }
+
+  Truck.find({ created_by: req.user.id, assigned_to: 0 }, (err, trucks) => {
     if (err) {
       res.status(500).json({
         status: err,
       });
       return;
+    }
+
+    if (!trucks.length) {
+      res.status(500).json({
+        status:
+          'Unable to update truck info. Please make sure it is not assigned to a driver',
+      });
     }
 
     // eslint-disable-next-line camelcase
@@ -116,6 +144,13 @@ module.exports.update_truck_info = (req, res) => {
 };
 
 module.exports.delete_truck = (req, res) => {
+  if (req.user.type !== 'driver') {
+    res.status(400).json({
+      status: 'User is not a driver',
+    });
+    return;
+  }
+
   Truck.findOneAndDelete(
     {
       id: req.body.id,
@@ -146,6 +181,13 @@ module.exports.delete_truck = (req, res) => {
 };
 
 module.exports.assign_truck = (req, res) => {
+  if (req.user.type !== 'driver') {
+    res.status(400).json({
+      status: 'User is not a driver',
+    });
+    return;
+  }
+
   Truck.findOne({ assigned_to: req.user.id }, (err, truck) => {
     if (err) {
       res.status(500).json({
@@ -186,6 +228,13 @@ module.exports.assign_truck = (req, res) => {
 };
 
 module.exports.unassign_truck = (req, res) => {
+  if (req.user.type !== 'driver') {
+    res.status(400).json({
+      status: 'User is not a driver',
+    });
+    return;
+  }
+
   Truck.findOneAndUpdate(
     {
       id: req.body.id,

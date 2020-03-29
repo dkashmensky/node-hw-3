@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const Users = require('./models/user.model');
 const Trucks = require('./models/truck.model');
 const Truck_types = require('./models/truck_type.model');
+const Loads = require('./models/load.model');
 
 const app = express();
 
@@ -12,6 +13,7 @@ const loginRouter = require('./routes/api/login');
 const registerRouter = require('./routes/api/register');
 const userRouter = require('./routes/api/user');
 const truckRouter = require('./routes/api/truck');
+const loadRouter = require('./routes/api/load');
 
 // Middleware
 const auth = require('./routes/middleware/auth');
@@ -35,5 +37,6 @@ app.use(auth);
 
 app.use('/api', userRouter);
 app.use('/api', truckRouter);
+app.use('/api', loadRouter);
 
 app.listen(8080);
