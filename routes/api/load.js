@@ -26,3 +26,9 @@ router.put('/load/post', (req, res) => {
 router.get('/load/info', (req, res) => {
   loadController.get_load_info(req, res);
 });
+
+router.put('/load/process', (req, res) => {
+  loadController.change_load_state(req, res);
+});
+
+module.exports = router;

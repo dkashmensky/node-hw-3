@@ -19,4 +19,8 @@ router.delete('/user/delete', (req, res) => {
   userController.delete_user(req, res);
 });
 
+router.put('/user/update', (req, res) => {
+  userController.update_user_info(req, res);
+});
+
 module.exports = router;

@@ -17,3 +17,16 @@ module.exports.checkUsername = (users, username) => {
 module.exports.checkTruckName = (trucks, name) => {
   return trucks.find(item => item.name === name);
 };
+
+module.exports.getNextLoadState = state => {
+  switch (state) {
+    case 'En route to pick up':
+      return 'Arrived to pick up';
+    case 'Arrived to pick up':
+      return 'En route to delivery';
+    case 'En route to delivery':
+      return 'Arrived to delivery';
+    default:
+      return false;
+  }
+};

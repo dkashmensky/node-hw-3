@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const User = mongoose.model('Users');
 const router = express.Router();
@@ -20,7 +21,9 @@ router.post('/login', (req, res) => {
     const { username, password } = req.body;
 
     const [user] = users.filter(
-      item => item.username === username && item.password === password
+      item =>
+        item.username === username &&
+        bcrypt.compareSync(password, item.password)
     );
 
     if (!user) {

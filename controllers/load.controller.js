@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
+const joi = require('@hapi/joi');
 const utils = require('../utils/utils');
+const validateSchemas = require('../utils/validator');
 
 const Load = mongoose.model('Loads');
 const Truck = mongoose.model('Trucks');
@@ -8,6 +10,14 @@ module.exports.create_load = (req, res) => {
   if (req.user.type !== 'shipper') {
     res.status(400).json({
       status: 'User is not a shipper',
+    });
+    return;
+  }
+
+  const validation = validateSchemas.create_load_schema.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
     });
     return;
   }
@@ -42,6 +52,9 @@ module.exports.create_load = (req, res) => {
       }
 
       res.status(200).json(load);
+      console.log(
+        `Created: Load. ID: ${load.id}. Created by: ${load.created_by}`
+      );
     });
   });
 };
@@ -74,10 +87,18 @@ module.exports.update_load = (req, res) => {
     return;
   }
 
-  const { name, length, height, width, capacity } = req.body;
+  const validation = validateSchemas.update_load_schema.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
+    });
+    return;
+  }
+
+  const { id, name, length, height, width, capacity } = req.body;
 
   Load.findOneAndUpdate(
-    { id: req.body.id, created_by: req.user.id, status: 'new', assigned_to: 0 },
+    { id, created_by: req.user.id, status: 'new', assigned_to: 0 },
     { name, length, height, width, capacity },
     (err, load) => {
       if (err) {
@@ -98,6 +119,7 @@ module.exports.update_load = (req, res) => {
       res.status(200).json({
         status: 'Load info updated',
       });
+      console.log(`Updated: Load. ID: ${load.id}. Updated by: ${req.user.id}`);
     }
   );
 };
@@ -106,6 +128,14 @@ module.exports.delete_load = (req, res) => {
   if (req.user.type !== 'shipper') {
     res.status(400).json({
       status: 'User is not a shipper',
+    });
+    return;
+  }
+
+  const validation = validateSchemas.check_id.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
     });
     return;
   }
@@ -131,6 +161,7 @@ module.exports.delete_load = (req, res) => {
       res.status(200).json({
         status: 'Load deleted successfully',
       });
+      console.log(`Deleted: Load. ID: ${load.id}. Deleted by: ${req.user.id}`);
     }
   );
 };
@@ -139,6 +170,14 @@ module.exports.post_load = (req, res) => {
   if (req.user.type !== 'shipper') {
     res.status(400).json({
       status: 'User is not a shipper',
+    });
+    return;
+  }
+
+  const validation = validateSchemas.check_id.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
     });
     return;
   }
@@ -167,6 +206,10 @@ module.exports.post_load = (req, res) => {
         return;
       }
 
+      console.log(
+        `Load status changed to posted. ID: ${load.id}. Updated by: ${req.user.id}`
+      );
+
       const { height, length, width, capacity } = load;
       Truck.findOneAndUpdate(
         {
@@ -189,16 +232,38 @@ module.exports.post_load = (req, res) => {
           }
 
           if (!truck) {
-            Load.findOneAndUpdate({ id: load.id }, { status: 'new' });
+            Load.findOneAndUpdate(
+              { id: load.id },
+              {
+                status: 'new',
+                $addToSet: {
+                  logs: {
+                    message: 'Unable to find suitable truck',
+                    time: Date.now(),
+                  },
+                },
+              },
+              (wtf, wtfLoad) => {
+                if (wtf) {
+                  res.status(500).json({
+                    status: wtf,
+                  });
+                }
+              }
+            );
             res.status(400).json({
               status: 'Unable to find suitable truck',
             });
+            console.log(
+              `Load status changed to new. ID: ${load.id}. Updated by: ${req.user.id}`
+            );
             return;
           }
 
           Load.findOneAndUpdate(
             { id: load.id },
             {
+              assigned_to: truck.assigned_to,
               status: 'assigned',
               state: 'En route to pick up',
               $addToSet: {
@@ -219,6 +284,12 @@ module.exports.post_load = (req, res) => {
               res.status(200).json({
                 status: `Load has been successfully assigned to driver ${truck.assigned_to}`,
               });
+              console.log(
+                `Load status changed to assigned. ID: ${assignedLoad.id}. Updated by: ${req.user.id}`
+              );
+              console.log(
+                `Load assigned to driver ${truck.assigned_to}. ID: ${assignedLoad.id}. Updated by: ${req.user.id}`
+              );
             }
           );
         }
@@ -228,6 +299,14 @@ module.exports.post_load = (req, res) => {
 };
 
 module.exports.get_load_info = (req, res) => {
+  const validation = validateSchemas.check_id.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
+    });
+    return;
+  }
+
   Load.findOne({ id: req.body.id }, (err, load) => {
     if (err) {
       res.status(500).json({
@@ -245,4 +324,129 @@ module.exports.get_load_info = (req, res) => {
 
     res.status(200).json(load);
   });
+};
+
+module.exports.change_load_state = (req, res) => {
+  if (req.user.type !== 'driver') {
+    res.status(400).json({
+      status: 'User is not a driver',
+    });
+    return;
+  }
+
+  const validation = validateSchemas.check_id.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
+    });
+    return;
+  }
+
+  Load.findOne(
+    { id: req.body.id, assigned_to: req.user.id, status: 'assigned' },
+    (err, load) => {
+      if (err) {
+        res.status(500).json({
+          status: err,
+        });
+        return;
+      }
+
+      if (!load) {
+        res.status(400).json({
+          status: 'No such load in assigned state',
+        });
+        return;
+      }
+
+      const newState = utils.getNextLoadState(load.state);
+      if (!newState) {
+        res.status(500).json({
+          status: 'Unexpected server error',
+        });
+        return;
+      }
+
+      Load.findOneAndUpdate(
+        {
+          id: load.id,
+          assigned_to: load.assigned_to,
+        },
+        {
+          state: newState,
+          $addToSet: {
+            logs: {
+              message: `State change. New state: ${newState}`,
+              time: Date.now(),
+            },
+          },
+        },
+        async (error, updatedLoad) => {
+          if (error) {
+            res.status(500).json({
+              status: error,
+            });
+            return;
+          }
+
+          if (!updatedLoad) {
+            res.status(500).json({
+              status: 'Unknown server error',
+            });
+            return;
+          }
+
+          if (newState === 'Arrived to delivery') {
+            await Load.findOneAndUpdate(
+              { id: updatedLoad.id },
+              {
+                status: 'shipped',
+                $addToSet: {
+                  logs: {
+                    message: `Load has been shipped by driver ID: ${load.assigned_to}`,
+                    time: Date.now(),
+                  },
+                },
+              },
+              (shipError, shipLoad) => {
+                if (shipError) {
+                  res.status(500).json({
+                    status: shipError,
+                  });
+                  return;
+                }
+
+                console.log(
+                  `Load has been shipped by driver ID: ${load.assigned_to}. ID: ${load.id}. Updated by: ${req.user.id}`
+                );
+              }
+            );
+
+            await Truck.findOneAndUpdate(
+              {
+                assigned_to: req.user.id,
+              },
+              {
+                status: 'IS',
+              },
+              (truckError, truck) => {
+                if (truckError) {
+                  res.status(500).json({
+                    status: truckError,
+                  });
+                }
+              }
+            );
+          }
+
+          res.status(200).json({
+            status: 'Load state changed',
+          });
+          console.log(
+            `Load state changed to ${newState}. ID: ${load.id}. Updated by: ${req.user.id}`
+          );
+        }
+      );
+    }
+  );
 };

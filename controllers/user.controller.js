@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const joi = require('@hapi/joi');
+const validateSchemas = require('../utils/validator');
 const utils = require('../utils/utils');
 
+const saltRounds = 10;
 const User = mongoose.model('Users');
 const Truck = mongoose.model('Trucks');
 const Load = mongoose.model('Loads');
@@ -23,6 +27,14 @@ module.exports.create_user = (req, res) => {
     if (err) {
       res.status(500).json({
         status: err,
+      });
+      return;
+    }
+
+    const validation = validateSchemas.create_user_schema.validate(req.body);
+    if (validation.error) {
+      res.status(400).json({
+        status: validation.error.details[0].message,
       });
       return;
     }
@@ -51,7 +63,7 @@ module.exports.create_user = (req, res) => {
       id,
       username,
       fullname,
-      password,
+      password: bcrypt.hashSync(password, saltRounds),
       email,
       type,
     });
@@ -64,9 +76,81 @@ module.exports.create_user = (req, res) => {
         return;
       }
 
-      res.status(200).json(user);
+      res.status(200).json({
+        status: `User has been registered with ID: ${id}`,
+      });
     });
   });
+};
+
+module.exports.update_user_info = (req, res) => {
+  const validation = validateSchemas.update_user_schema.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
+    });
+    return;
+  }
+
+  if (req.user.type === 'driver') {
+    Load.findOne(
+      { assigned_to: req.user.id, state: { $ne: 'shipped' } },
+      (err, load) => {
+        if (err) {
+          res.status(500).json({
+            status: err,
+          });
+          return;
+        }
+
+        if (load) {
+          res.status(400).json({
+            status: 'Unable to change info while user is on load',
+          });
+          return;
+        }
+
+        const { fullname, email } = req.body;
+
+        User.findOneAndUpdate(
+          { id: req.user.id },
+          { fullname, email },
+          (error, user) => {
+            if (error) {
+              res.status(500).json({
+                status: error,
+              });
+              return;
+            }
+
+            res.status(200).json({
+              status: 'User info updated',
+            });
+          }
+        );
+      }
+    );
+    return;
+  }
+
+  const { fullname, email } = req.body;
+
+  User.findOneAndUpdate(
+    { id: req.user.id },
+    { fullname, email },
+    (error, user) => {
+      if (error) {
+        res.status(500).json({
+          status: error,
+        });
+        return;
+      }
+
+      res.status(200).json({
+        status: 'User info updated',
+      });
+    }
+  );
 };
 
 module.exports.get_user_info = (req, res) => {
@@ -90,9 +174,17 @@ module.exports.get_user_info = (req, res) => {
 };
 
 module.exports.change_user_password = (req, res) => {
+  const validation = validateSchemas.change_pass_schema.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
+    });
+    return;
+  }
+
   User.findOneAndUpdate(
     { id: req.user.id },
-    { password: req.body.password },
+    { password: bcrypt.hashSync(req.body.password, saltRounds) },
     (err, user) => {
       if (err) {
         res.status(500).json({
@@ -109,39 +201,99 @@ module.exports.change_user_password = (req, res) => {
 };
 
 module.exports.delete_user = (req, res) => {
-  User.findOneAndDelete({ id: req.user.id }, async (err, user) => {
-    if (err) {
-      res.status(500).json({
-        status: err,
-      });
-      return;
-    }
-
-    if (!user) {
-      res.status(500).json({
-        status: 'Unable to delete user',
-      });
-      return;
-    }
-
-    await Truck.deleteMany({ created_by: user.id }, error => {
-      if (error) {
+  if (req.user.type === 'driver') {
+    Truck.findOne({ assigned_to: req.user.id }, (err, truck) => {
+      if (err) {
         res.status(500).json({
-          status: error,
+          status: err,
+        });
+        return;
+      }
+
+      if (truck) {
+        res.status(400).json({
+          status: 'Unable to delete user with truck assigned',
+        });
+        return;
+      }
+
+      User.findOneAndDelete({ id: req.user.id }, async (error, user) => {
+        if (error) {
+          res.status(500).json({
+            status: error,
+          });
+          return;
+        }
+
+        if (!user) {
+          res.status(500).json({
+            status: 'Unable to delete user',
+          });
+          return;
+        }
+
+        await Truck.deleteMany({ created_by: user.id }, errorTruck => {
+          if (errorTruck) {
+            res.status(500).json({
+              status: errorTruck,
+            });
+          }
+        });
+
+        res.status(200).json({
+          status: 'User deleted successfully',
+        });
+      });
+    });
+  } else {
+    Load.findOne(
+      {
+        created_by: req.user.id,
+        status: { $or: [{ $ne: 'new' }, { $ne: 'shipped' }] },
+      },
+      (err, load) => {
+        if (err) {
+          res.status(500).json({
+            status: err,
+          });
+          return;
+        }
+
+        if (load) {
+          res.status(400).json({
+            status: 'Unable to delete user with loads shipping',
+          });
+          return;
+        }
+
+        User.findOneAndDelete({ id: req.user.id }, async (error, user) => {
+          if (error) {
+            res.status(500).json({
+              status: error,
+            });
+            return;
+          }
+
+          if (!user) {
+            res.status(500).json({
+              status: 'Unable to delete user',
+            });
+            return;
+          }
+
+          await Load.deleteMany({ created_by: user.id }, errorTruck => {
+            if (errorTruck) {
+              res.status(500).json({
+                status: errorTruck,
+              });
+            }
+          });
+
+          res.status(200).json({
+            status: 'User deleted successfully',
+          });
         });
       }
-    });
-
-    await Load.deleteMany({ created_by: user.id }, error => {
-      if (error) {
-        res.status(500).json({
-          status: error,
-        });
-      }
-    });
-
-    res.status(200).json({
-      status: 'User deleted successfully',
-    });
-  });
+    );
+  }
 };
