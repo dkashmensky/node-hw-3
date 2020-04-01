@@ -7,7 +7,7 @@ const User = mongoose.model('Users');
 const router = express.Router();
 
 // eslint-disable-next-line import/no-unresolved
-const { secret } = require('../../config/auth');
+const { secret } = require('config');
 
 router.post('/login', (req, res) => {
   User.find({}, (err, users) => {

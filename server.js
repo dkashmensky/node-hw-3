@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const config = require('config');
 const Users = require('./models/user.model');
 const Trucks = require('./models/truck.model');
 const Truck_types = require('./models/truck_type.model');
@@ -21,7 +22,7 @@ const headers = require('./routes/middleware/headers');
 const logger = require('./routes/middleware/logger');
 
 mongoose.connect(
-  'mongodb+srv://dkashmensky:Nap66n7j@uberest-tb5pi.mongodb.net/uber',
+  `mongodb+srv://${config.dblogin}:${config.dbpassword}@uberest-tb5pi.mongodb.net/${config.dbname}`,
   { useNewUrlParser: true }
 );
 

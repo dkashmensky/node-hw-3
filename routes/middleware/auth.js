@@ -1,7 +1,7 @@
 /* eslint-disable dot-notation */
 const jwt = require('jsonwebtoken');
 // eslint-disable-next-line import/no-unresolved
-const { secret } = require('../../config/auth');
+const { secret } = require('config');
 
 module.exports = (req, res, next) => {
   if (req.headers['authorization']) {
