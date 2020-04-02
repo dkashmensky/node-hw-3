@@ -67,16 +67,39 @@ module.exports.get_loads = (req, res) => {
     return;
   }
 
-  Load.find({ created_by: req.user.id }, (err, loads) => {
-    if (err) {
-      res.status(500).json({
-        status: err,
-      });
-      return;
-    }
+  const validation = validateSchemas.get_loads_schema.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
+    });
+    return;
+  }
 
-    res.status(200).json(loads);
-  });
+  const { status } = req.body;
+
+  if (status) {
+    Load.find({ created_by: req.user.id, status }, (err, loads) => {
+      if (err) {
+        res.status(500).json({
+          status: err,
+        });
+        return;
+      }
+
+      res.status(200).json(loads);
+    });
+  } else {
+    Load.find({ created_by: req.user.id }, (err, loads) => {
+      if (err) {
+        res.status(500).json({
+          status: err,
+        });
+        return;
+      }
+
+      res.status(200).json(loads);
+    });
+  }
 };
 
 module.exports.update_load = (req, res) => {

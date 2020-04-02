@@ -118,3 +118,7 @@ module.exports.update_load_schema = joi.object({
     .min(1)
     .required(),
 });
+
+module.exports.get_loads_schema = joi.object({
+  status: joi.string().valid('new', 'posted', 'assigned', 'shipped'),
+});
