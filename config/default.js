@@ -3,4 +3,9 @@ module.exports = {
   dblogin: 'test-user',
   dbpassword: 'B3ohejWC3xusjOa0',
   dbname: 'uber',
+  emaillogin: 'epamfreighterproject@gmail.com',
+  emailpass: 'GFMmmtfA2JUg',
+  emailport: 465,
+  emailhost: 'smtp.gmail.com',
+  emailsecure: true,
 };

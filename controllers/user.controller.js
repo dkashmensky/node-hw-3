@@ -68,7 +68,7 @@ module.exports.create_user = (req, res) => {
       type,
     });
 
-    newUser.save((error, user) => {
+    newUser.save(async (error, user) => {
       if (error) {
         res.status(500).json({
           status: error,
@@ -79,6 +79,8 @@ module.exports.create_user = (req, res) => {
       res.status(200).json({
         status: `User has been registered with ID: ${id}`,
       });
+
+      utils.send_mail('register', user, user.email);
     });
   });
 };
@@ -196,6 +198,8 @@ module.exports.change_user_password = (req, res) => {
       res.status(200).json({
         status: 'Password changed successfully',
       });
+
+      utils.send_mail('password_change', user, user.email);
     }
   );
 };

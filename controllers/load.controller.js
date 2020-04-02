@@ -5,6 +5,7 @@ const validateSchemas = require('../utils/validator');
 
 const Load = mongoose.model('Loads');
 const Truck = mongoose.model('Trucks');
+const User = mongoose.model('Users');
 
 module.exports.create_load = (req, res) => {
   if (req.user.type !== 'shipper') {
@@ -307,12 +308,30 @@ module.exports.post_load = (req, res) => {
               res.status(200).json({
                 status: `Load has been successfully assigned to driver ${truck.assigned_to}`,
               });
+
               console.log(
                 `Load status changed to assigned. ID: ${assignedLoad.id}. Updated by: ${req.user.id}`
               );
               console.log(
                 `Load assigned to driver ${truck.assigned_to}. ID: ${assignedLoad.id}. Updated by: ${req.user.id}`
               );
+
+              const emailData = {
+                user_fullname: req.user.fullname,
+                load_name: assignedLoad.name,
+                load_id: assignedLoad.id,
+                driver_id: truck.assigned_to,
+                truck_name: truck.name,
+                load_state: 'En route to pick up',
+              };
+
+              if (!req.user.email) {
+                console.log(
+                  `Mail sending failed in load assign. Load ID: ${assignedLoad.id}`
+                );
+                return;
+              }
+              utils.send_mail('load_assigned', emailData, req.user.email);
             }
           );
         }
@@ -431,7 +450,7 @@ module.exports.change_load_state = (req, res) => {
                   },
                 },
               },
-              (shipError, shipLoad) => {
+              async (shipError, shipLoad) => {
                 if (shipError) {
                   res.status(500).json({
                     status: shipError,
@@ -441,6 +460,56 @@ module.exports.change_load_state = (req, res) => {
 
                 console.log(
                   `Load has been shipped by driver ID: ${load.assigned_to}. ID: ${load.id}. Updated by: ${req.user.id}`
+                );
+
+                const mailData = {
+                  owner_email: '',
+                  owner_fullname: '',
+                  driver_email: req.user.email,
+                  driver_id: req.user.id,
+                  load_id: shipLoad.id,
+                  load_name: shipLoad.name,
+                };
+
+                await User.findOne(
+                  { id: shipLoad.created_by },
+                  (userErr, user) => {
+                    if (userErr) {
+                      res.status(500).json({
+                        status: error,
+                      });
+                      return;
+                    }
+
+                    mailData.owner_email = user.email;
+                    mailData.owner_fullname = user.fullname;
+                  }
+                );
+
+                if (!mailData.owner_email) {
+                  console.log(
+                    `Mail sending failed in shipping finish (shipper). Load ID: ${shipLoad.id}`
+                  );
+                  return;
+                }
+
+                utils.send_mail(
+                  'load_shipped_shipper',
+                  mailData,
+                  mailData.owner_email
+                );
+
+                if (!mailData.driver_email) {
+                  console.log(
+                    `Mail sending failed in shipping finish (driver). Load ID: ${shipLoad.id}`
+                  );
+                  return;
+                }
+
+                utils.send_mail(
+                  'load_shipped_driver',
+                  mailData,
+                  mailData.driver_email
                 );
               }
             );
@@ -465,9 +534,42 @@ module.exports.change_load_state = (req, res) => {
           res.status(200).json({
             status: 'Load state changed',
           });
+
           console.log(
             `Load state changed to ${newState}. ID: ${load.id}. Updated by: ${req.user.id}`
           );
+
+          const mailData = {
+            owner_fullname: '',
+            owner_email: '',
+            load_name: updatedLoad.name,
+            load_id: updatedLoad.id,
+            load_state: newState,
+          };
+
+          await User.findOne(
+            { id: updatedLoad.created_by },
+            (userErr, user) => {
+              if (userErr) {
+                res.status(500).json({
+                  status: error,
+                });
+                return;
+              }
+
+              mailData.owner_email = user.email;
+              mailData.owner_fullname = user.fullname;
+            }
+          );
+
+          if (!mailData.owner_email) {
+            console.log(
+              `Mail sending failed in state change. Load ID: ${load.id}`
+            );
+            return;
+          }
+
+          utils.send_mail('load_state_change', mailData, mailData.owner_email);
         }
       );
     }

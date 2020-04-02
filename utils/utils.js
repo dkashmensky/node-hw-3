@@ -1,3 +1,9 @@
+const fs = require('fs');
+const handlebars = require('handlebars');
+const nodemailer = require('nodemailer');
+const config = require('config');
+const mailTypes = require('../config/email_types');
+
 module.exports.getNewId = data => {
   if (data && data.length) {
     data.sort((a, b) => b.id - a.id);
@@ -29,4 +35,29 @@ module.exports.getNextLoadState = state => {
     default:
       return false;
   }
+};
+
+module.exports.make_template = (type, data) => {
+  const templateFile = fs.readFileSync(mailTypes[type].path, 'utf8');
+  const compiled = handlebars.compile(templateFile);
+  return compiled(data, { allowedProtoProperties: true });
+};
+
+module.exports.send_mail = (type, data, to) => {
+  const transporter = nodemailer.createTransport({
+    host: config.emailhost,
+    port: config.emailport,
+    secure: config.emailsecure,
+    auth: {
+      user: config.emaillogin,
+      pass: config.emailpass,
+    },
+  });
+
+  const sender = transporter.sendMail({
+    from: 'EPAMFreighter',
+    to,
+    subject: `[EPAMFreighter] ${mailTypes[type].subject}`,
+    html: this.make_template(type, data),
+  });
 };
