@@ -122,3 +122,7 @@ module.exports.update_load_schema = joi.object({
 module.exports.get_loads_schema = joi.object({
   status: joi.string().valid('new', 'posted', 'assigned', 'shipped'),
 });
+
+module.exports.upload_avatar_schema = joi.object({
+  file: joi.string(),
+});

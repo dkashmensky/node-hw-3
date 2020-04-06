@@ -23,4 +23,8 @@ router.put('/user/update', (req, res) => {
   userController.update_user_info(req, res);
 });
 
+router.put('/user/avatar', (req, res) => {
+  userController.upload_avatar(req, res);
+});
+
 module.exports = router;

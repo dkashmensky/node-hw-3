@@ -164,13 +164,14 @@ module.exports.get_user_info = (req, res) => {
       return;
     }
 
-    const { id, fullname, email, type } = user;
+    const { id, fullname, email, type, avatar } = user;
 
     res.json({
       id,
       fullname,
       email,
       type,
+      avatar,
     });
   });
 };
@@ -300,4 +301,41 @@ module.exports.delete_user = (req, res) => {
       }
     );
   }
+};
+
+module.exports.upload_avatar = (req, res) => {
+  const validation = validateSchemas.upload_avatar_schema.validate(req.body);
+  if (validation.error) {
+    res.status(400).json({
+      status: validation.error.details[0].message,
+    });
+    return;
+  }
+
+  let userAvatar;
+  try {
+    userAvatar = Buffer.from(req.body.file.split(',')[1], 'base64');
+  } catch (e) {
+    res.status(500).json({
+      status: `Unexpected server error: ${e}`,
+    });
+    return;
+  }
+
+  User.findOneAndUpdate(
+    { id: req.user.id },
+    { avatar: userAvatar },
+    (err, user) => {
+      if (err) {
+        res.status(500).json({
+          status: err,
+        });
+        return;
+      }
+
+      res.status(200).json({
+        status: 'User avatar uploaded',
+      });
+    }
+  );
 };
