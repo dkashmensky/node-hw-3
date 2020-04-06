@@ -1,0 +1,7 @@
+{
+  "name": "EPAMFreighter API",
+  "version": "0.1.0",
+  "description": "Documentation for EPAMFreighter service API",
+  "title": "EPAMFreighter API",
+  "url" : "http://localhost:8080/api"
+}

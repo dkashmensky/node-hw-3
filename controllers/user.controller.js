@@ -14,7 +14,8 @@ module.exports.get_users = (req, res) => {
   User.find({}, (err, users) => {
     if (err) {
       res.status(500).json({
-        status: err,
+        status: 'MongooseError',
+        error: err,
       });
       return;
     }
@@ -36,7 +37,7 @@ module.exports.get_users = (req, res) => {
       };
     });
 
-    res.status(200).json(usersArray);
+    res.status(200).json({ users: usersArray });
   });
 };
 
@@ -44,7 +45,8 @@ module.exports.create_user = (req, res) => {
   User.find({}, (err, users) => {
     if (err) {
       res.status(500).json({
-        status: err,
+        status: 'MongooseError',
+        error: err,
       });
       return;
     }
@@ -52,7 +54,8 @@ module.exports.create_user = (req, res) => {
     const validation = validateSchemas.create_user_schema.validate(req.body);
     if (validation.error) {
       res.status(400).json({
-        status: validation.error.details[0].message,
+        status: 'ValidationError',
+        error: validation.error.details[0].message,
       });
       return;
     }
@@ -62,7 +65,7 @@ module.exports.create_user = (req, res) => {
     const emailExists = utils.checkEmail(users, email);
     if (emailExists) {
       res.status(400).json({
-        status: 'Email already exists',
+        status: 'EmailExists',
       });
       return;
     }
@@ -70,7 +73,7 @@ module.exports.create_user = (req, res) => {
     const usernameExists = utils.checkUsername(users, username);
     if (usernameExists) {
       res.status(400).json({
-        status: 'Username already exists',
+        status: 'UsernameExists',
       });
       return;
     }
@@ -89,13 +92,14 @@ module.exports.create_user = (req, res) => {
     newUser.save(async (error, user) => {
       if (error) {
         res.status(500).json({
-          status: error,
+          status: 'MongooseError',
+          error,
         });
         return;
       }
 
       res.status(200).json({
-        status: `User has been registered with ID: ${id}`,
+        status: `UserRegistered ID:${id}`,
       });
 
       utils.send_mail('register', user, user.email);
@@ -107,7 +111,8 @@ module.exports.update_user_info = (req, res) => {
   const validation = validateSchemas.update_user_schema.validate(req.body);
   if (validation.error) {
     res.status(400).json({
-      status: validation.error.details[0].message,
+      status: 'ValidationError',
+      error: validation.error.details[0].message,
     });
     return;
   }
@@ -118,7 +123,8 @@ module.exports.update_user_info = (req, res) => {
       (err, load) => {
         if (err) {
           res.status(500).json({
-            status: err,
+            status: 'MongooseError',
+            error: err,
           });
           return;
         }
@@ -138,7 +144,8 @@ module.exports.update_user_info = (req, res) => {
           (error, user) => {
             if (error) {
               res.status(500).json({
-                status: error,
+                status: 'MongooseError',
+                error,
               });
               return;
             }
@@ -161,7 +168,8 @@ module.exports.update_user_info = (req, res) => {
     (error, user) => {
       if (error) {
         res.status(500).json({
-          status: error,
+          status: 'MongooseError',
+          error,
         });
         return;
       }
@@ -177,7 +185,8 @@ module.exports.get_user_info = (req, res) => {
   User.findOne({ id: req.user.id }, (err, user) => {
     if (err) {
       res.status(500).json({
-        status: err,
+        status: 'MongooseError',
+        error: err,
       });
       return;
     }
@@ -205,7 +214,8 @@ module.exports.change_user_password = (req, res) => {
   const validation = validateSchemas.change_pass_schema.validate(req.body);
   if (validation.error) {
     res.status(400).json({
-      status: validation.error.details[0].message,
+      status: 'ValidationError',
+      error: validation.error.details[0].message,
     });
     return;
   }
@@ -216,13 +226,14 @@ module.exports.change_user_password = (req, res) => {
     (err, user) => {
       if (err) {
         res.status(500).json({
-          status: err,
+          status: 'MongooseError',
+          error: err,
         });
         return;
       }
 
       res.status(200).json({
-        status: 'Password changed successfully',
+        status: 'PasswordChanged',
       });
 
       utils.send_mail('password_change', user, user.email);
@@ -235,14 +246,15 @@ module.exports.delete_user = (req, res) => {
     Truck.findOne({ assigned_to: req.user.id }, (err, truck) => {
       if (err) {
         res.status(500).json({
-          status: err,
+          status: 'MongooseError',
+          error: err,
         });
         return;
       }
 
       if (truck) {
         res.status(400).json({
-          status: 'Unable to delete user with truck assigned',
+          status: 'TruckAssigned',
         });
         return;
       }
@@ -250,14 +262,15 @@ module.exports.delete_user = (req, res) => {
       User.findOneAndDelete({ id: req.user.id }, async (error, user) => {
         if (error) {
           res.status(500).json({
-            status: error,
+            status: 'MongooseError',
+            error,
           });
           return;
         }
 
         if (!user) {
           res.status(500).json({
-            status: 'Unable to delete user',
+            status: 'UnableDeleteUser',
           });
           return;
         }
@@ -265,13 +278,14 @@ module.exports.delete_user = (req, res) => {
         await Truck.deleteMany({ created_by: user.id }, errorTruck => {
           if (errorTruck) {
             res.status(500).json({
-              status: errorTruck,
+              status: 'MongooseError',
+              error: errorTruck,
             });
           }
         });
 
         res.status(200).json({
-          status: 'User deleted successfully',
+          status: 'UserDeleted',
         });
       });
     });
@@ -284,14 +298,15 @@ module.exports.delete_user = (req, res) => {
       (err, load) => {
         if (err) {
           res.status(500).json({
-            status: err,
+            status: 'MongooseError',
+            error: err,
           });
           return;
         }
 
         if (load) {
           res.status(400).json({
-            status: 'Unable to delete user with loads shipping',
+            status: 'LoadShipping',
           });
           return;
         }
@@ -299,14 +314,15 @@ module.exports.delete_user = (req, res) => {
         User.findOneAndDelete({ id: req.user.id }, async (error, user) => {
           if (error) {
             res.status(500).json({
-              status: error,
+              status: 'MongooseError',
+              error,
             });
             return;
           }
 
           if (!user) {
             res.status(500).json({
-              status: 'Unable to delete user',
+              status: 'UnableDeleteUser',
             });
             return;
           }
@@ -314,13 +330,14 @@ module.exports.delete_user = (req, res) => {
           await Load.deleteMany({ created_by: user.id }, errorTruck => {
             if (errorTruck) {
               res.status(500).json({
-                status: errorTruck,
+                status: 'MongooseError',
+                error: errorTruck,
               });
             }
           });
 
           res.status(200).json({
-            status: 'User deleted successfully',
+            status: 'UserDeleted',
           });
         });
       }
@@ -332,7 +349,8 @@ module.exports.upload_avatar = (req, res) => {
   const validation = validateSchemas.upload_avatar_schema.validate(req.body);
   if (validation.error) {
     res.status(400).json({
-      status: validation.error.details[0].message,
+      status: 'ValidationError',
+      error: validation.error.details[0].message,
     });
     return;
   }
@@ -346,7 +364,8 @@ module.exports.upload_avatar = (req, res) => {
     userAvatar = Buffer.from(splitFileString[1], 'base64');
   } catch (e) {
     res.status(500).json({
-      status: `Unexpected server error: ${e}`,
+      status: 'UnexpectedError',
+      error: e,
     });
     return;
   }
@@ -357,13 +376,14 @@ module.exports.upload_avatar = (req, res) => {
     (err, user) => {
       if (err) {
         res.status(500).json({
-          status: err,
+          status: 'MongooseError',
+          error: err,
         });
         return;
       }
 
       res.status(200).json({
-        status: 'User avatar uploaded',
+        status: 'AvatarUploaded',
       });
     }
   );
