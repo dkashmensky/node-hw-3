@@ -28,6 +28,7 @@ const UserSchema = new Schema({
     required: true,
   },
   avatar: Buffer,
+  avatar_info: String,
 });
 
 module.exports = mongoose.model('Users', UserSchema);

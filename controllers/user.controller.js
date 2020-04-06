@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const joi = require('@hapi/joi');
@@ -18,7 +19,24 @@ module.exports.get_users = (req, res) => {
       return;
     }
 
-    res.json(users);
+    const usersArray = users.map(item => {
+      let avatar;
+      try {
+        avatar = `${item.avatar_info},${item.avatar.toString('base64')}`;
+      } catch (e) {
+        avatar = '';
+      }
+
+      return {
+        id: item.id,
+        fullname: item.fullname,
+        email: item.email,
+        type: item.type,
+        avatar,
+      };
+    });
+
+    res.status(200).json(usersArray);
   });
 };
 
@@ -164,14 +182,21 @@ module.exports.get_user_info = (req, res) => {
       return;
     }
 
-    const { id, fullname, email, type, avatar } = user;
+    const { id, fullname, email, type, avatar, avatar_info } = user;
+
+    let profilePhoto;
+    try {
+      profilePhoto = `${avatar_info},${avatar.toString('base64')}`;
+    } catch (e) {
+      profilePhoto = '';
+    }
 
     res.json({
       id,
       fullname,
       email,
       type,
-      avatar,
+      avatar: profilePhoto,
     });
   });
 };
@@ -313,8 +338,12 @@ module.exports.upload_avatar = (req, res) => {
   }
 
   let userAvatar;
+  let avatarInfo;
   try {
-    userAvatar = Buffer.from(req.body.file.split(',')[1], 'base64');
+    const splitFileString = req.body.file.split(',');
+    // eslint-disable-next-line prefer-destructuring
+    avatarInfo = splitFileString[0];
+    userAvatar = Buffer.from(splitFileString[1], 'base64');
   } catch (e) {
     res.status(500).json({
       status: `Unexpected server error: ${e}`,
@@ -324,7 +353,7 @@ module.exports.upload_avatar = (req, res) => {
 
   User.findOneAndUpdate(
     { id: req.user.id },
-    { avatar: userAvatar },
+    { avatar: userAvatar, avatar_info: avatarInfo },
     (err, user) => {
       if (err) {
         res.status(500).json({
