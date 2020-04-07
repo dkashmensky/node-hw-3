@@ -131,7 +131,7 @@ module.exports.update_user_info = (req, res) => {
 
         if (load) {
           res.status(400).json({
-            status: 'Unable to change info while user is on load',
+            status: 'DriverOnLoad',
           });
           return;
         }
@@ -151,7 +151,7 @@ module.exports.update_user_info = (req, res) => {
             }
 
             res.status(200).json({
-              status: 'User info updated',
+              status: 'UserUpdated',
             });
           }
         );
@@ -175,7 +175,7 @@ module.exports.update_user_info = (req, res) => {
       }
 
       res.status(200).json({
-        status: 'User info updated',
+        status: 'UserUpdated',
       });
     }
   );

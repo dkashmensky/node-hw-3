@@ -21,7 +21,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Header-Example:",
-          "content": "{\n \"Authorization\": \"JWT token_string\"\n}",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
           "type": "json"
         }
       ]
@@ -41,7 +41,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Success-Response",
-          "content": "HTTP/1.1 200 OK\n{\n \"status\": \"UserDeleted\"\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"status\": \"UserDeleted\"\n}",
           "type": "json"
         }
       ]
@@ -80,12 +80,12 @@ define({ "api": [
       "examples": [
         {
           "title": "Truck-Response:",
-          "content": " HTTP/1.1 400 Bad Request\n{\n \"status\": \"TruckAssigned\"\n}",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"TruckAssigned\"\n}",
           "type": "json"
         },
         {
           "title": "Truck-Response:",
-          "content": " HTTP/1.1 400 Bad Request\n{\n \"status\": \"LoadShipping\"\n}",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"LoadShipping\"\n}",
           "type": "json"
         },
         {
@@ -125,7 +125,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Header-Example:",
-          "content": "{\n \"Authorization\": \"JWT token_string\"\n}",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
           "type": "json"
         }
       ]
@@ -163,7 +163,11 @@ define({ "api": [
           },
           {
             "group": "Success 200",
-            "type": "String",
+            "type": "string",
+            "allowedValues": [
+              "\"driver\"",
+              "\"shipper\""
+            ],
             "optional": false,
             "field": "users.type",
             "description": "<p>User account type (driver or shipper)</p>"
@@ -206,10 +210,111 @@ define({ "api": [
       },
       "examples": [
         {
-          "title": "Validation Error:",
+          "title": "Validation-Error:",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"ValidationError\",\n  \"error\": \"\\\"email\\\" must be a valid email\"\n}",
           "type": "json"
         },
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"status\": \"MongooseError\",\n  \"error\": \"Error text\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/user.js",
+    "groupTitle": "User"
+  },
+  {
+    "type": "get",
+    "url": "/user/profile",
+    "title": "Get user info",
+    "name": "GetUserProfile",
+    "group": "User",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "id",
+            "description": "<p>Unique user ID</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "fullname",
+            "description": "<p>User fullname</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "email",
+            "description": "<p>User email</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "string",
+            "allowedValues": [
+              "\"driver\"",
+              "\"shipper\""
+            ],
+            "optional": false,
+            "field": "type",
+            "description": "<p>User account type</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "avatar",
+            "description": "<p>User profile picture</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"id\": 1,\n  \"fullname\": \"John Doe\",\n  \"email\": \"example@mail.com\",\n  \"type\": \"driver\",\n  \"avatar\": \"data:image/png;base64,long-string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "Error 5xx": [
+          {
+            "group": "Error 5xx",
+            "optional": false,
+            "field": "MongooseError",
+            "description": "<p>DB queries error</p>"
+          }
+        ]
+      },
+      "examples": [
         {
           "title": "Error-Response:",
           "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"status\": \"MongooseError\",\n  \"error\": \"Error text\"\n}",
@@ -467,7 +572,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Header-Example:",
-          "content": "{\n \"Authorization\": \"JWT token_string\"\n}",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
           "type": "json"
         }
       ]
@@ -487,7 +592,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "{\n \"file\": \"data:image/png;base64,long-string\"\n}",
+          "content": "{\n  \"file\": \"data:image/png;base64,long-string\"\n}",
           "type": "json"
         }
       ]
@@ -507,7 +612,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n \"status\": \"AvatarUploaded\"\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"status\": \"AvatarUploaded\"\n}",
           "type": "json"
         }
       ]
@@ -539,7 +644,7 @@ define({ "api": [
       },
       "examples": [
         {
-          "title": "Validation Error:",
+          "title": "Validation-Error:",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"ValidationError\",\n  \"error\": \"\\\"file\\\" must be a valid string\"\n}",
           "type": "json"
         },
@@ -580,7 +685,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Header-Example:",
-          "content": "{\n \"Authorization\": \"JWT token_string\"\n}",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
           "type": "json"
         }
       ]
@@ -600,7 +705,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "{\n \"password\": \"MyNewPassword\"\n}",
+          "content": "{\n  \"password\": \"MyNewPassword\"\n}",
           "type": "json"
         }
       ]
@@ -620,7 +725,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n \"status\": \"PasswordChanged\"\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"status\": \"PasswordChanged\"\n}",
           "type": "json"
         }
       ]
@@ -646,8 +751,128 @@ define({ "api": [
       },
       "examples": [
         {
-          "title": "Validation Error:",
+          "title": "Validation-Error:",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"ValidationError\",\n  \"error\": \"\\\"password\\\" with value \\\"value\\\" fails to match the required pattern: /^[0-9a-zA-Z]{8,}$/\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"status\": \"MongooseError\",\n  \"error\": \"Error text\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/user.js",
+    "groupTitle": "User"
+  },
+  {
+    "type": "put",
+    "url": "/user/update",
+    "title": "Update user info",
+    "name": "PutUserUpdate",
+    "group": "User",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "fullname",
+            "description": "<p>New user fullname</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "email",
+            "description": "<p>New user email</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "{\n  \"fullname\": \"John Doe\",\n  \"email\": \"example@mail.com\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "status",
+            "description": "<p>UserUpdated success status returned</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"status\": \"UserUpdated\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "ValidationError",
+            "description": "<p>Received data is not valid</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "DriverOnLoad",
+            "description": "<p>User could not change profile info while on load</p>"
+          }
+        ],
+        "Error 5xx": [
+          {
+            "group": "Error 5xx",
+            "optional": false,
+            "field": "MongooseError",
+            "description": "<p>DB queries error</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Validation-Error:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"ValidationError\",\n  \"error\": \"\\\"email\\\" must be a valid email\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Driver-Error:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"DriverOnLoad\"\n}",
           "type": "json"
         },
         {
