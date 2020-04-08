@@ -7,4 +7,10 @@ Optional/Rockstar criteria implemented:<br />
   <li>Ability to filter loads by status (optional status parameter in GET /loads);</li>
   <li>Any system user can get notifications through the email about shipment updates;</li>
 </ul><br />
-Documentation located in /apidoc folder
+Documentation located in /apidoc folder<br /><br />
+How to run:<br />
+<ol>
+  <li>Pull</li>
+  <li>Run npm install</li>
+  <li>Run npm start</li>
+</ol>
