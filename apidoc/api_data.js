@@ -1,6 +1,333 @@
 define({ "api": [
   {
     "type": "delete",
+    "url": "/loads/:id",
+    "title": "Delete load",
+    "name": "DeleteLoads",
+    "group": "Load",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "status",
+            "description": "<p>Response status</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"status\": \"Load deleted successfully\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/load.js",
+    "groupTitle": "Load"
+  },
+  {
+    "type": "get",
+    "url": "/loads/:id/info",
+    "title": "Get load info by ID",
+    "name": "GetTrucksTypes",
+    "group": "Load",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "status",
+            "description": "<p>Response status</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object[]",
+            "optional": false,
+            "field": "load",
+            "description": "<p>Truck types array</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": false,
+            "field": "load.dimensions",
+            "description": "<p>Truck dimensions object</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "load.dimensions.length",
+            "description": "<p>Truck length</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "load.dimensions.height",
+            "description": "<p>Truck height</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "load.dimensions.width",
+            "description": "<p>Truck width</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "load._id",
+            "description": "<p>Unique truck type id</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "load.payload",
+            "description": "<p>Truck payload</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "load.assigned_to",
+            "description": "<p>Driver assigned to load</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "string",
+            "allowedValues": [
+              "\"new\"",
+              "\"posted\"",
+              "\"assigned\"",
+              "\"shipped\""
+            ],
+            "optional": false,
+            "field": "load.status",
+            "description": "<p>Load's current status</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "string",
+            "allowedValues": [
+              "\"En route to pick up\"",
+              "\"Arrived to pick up\"",
+              "\"En route to delivery\"",
+              "\"Arrived to delivery\""
+            ],
+            "optional": false,
+            "field": "load.state",
+            "description": "<p>Load's current state</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "load.created_by",
+            "description": "<p>Load's creator ID</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object[]",
+            "optional": false,
+            "field": "load.logs",
+            "description": "<p>Event logs container</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "load.logs._id",
+            "description": "<p>Unique log entry ID</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "load.logs.message",
+            "description": "<p>Log message</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "load.logs.time",
+            "description": "<p>Log message timestamp</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n \"status\": \"Success\",\n \"load\": {\n   \"dimensions\": {\n     \"length\": 1,\n     \"height\": 1,\n     \"width\": 1\n   },\n   \"assigned_to\": \"5e8dc57afc8873f6021967fa\",\n   \"status\": \"shipped\",\n   \"state\": \"Arrived to delivery\",\n   \"_id\": \"5e8df579fe1ad11f1787eb22\",\n   \"payload\": 1,\n   \"created_by\": \"5e8df38dabac3b02b79598d4\",\n   \"logs\": [\n     {\n       \"_id\": \"5e8df5cafe1ad11f1787eb25\",\n       \"message\": \"Unable to find suitable truck\",\n       \"time\": 1586361802708\n     }\n   ],\n }\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/load.js",
+    "groupTitle": "Load"
+  },
+  {
+    "type": "put",
+    "url": "/loads/:id",
+    "title": "Update load info",
+    "name": "PutLoads",
+    "group": "Load",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-type",
+            "description": "<p>Payload content type</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Content-Header-Example:",
+          "content": "{\n  \"Content-type\": \"application/json\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Object",
+            "optional": false,
+            "field": "dimensions",
+            "description": "<p>Truck new dimensions object</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "dimensions.length",
+            "description": "<p>Truck new length</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "dimensions.height",
+            "description": "<p>Truck new height</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "dimensions.width",
+            "description": "<p>Truck new width</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "payload",
+            "description": "<p>Truck new payload</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "{\n  \"dimensions\": {\n    \"length\": 150,\n    \"height\": 200,\n    \"width\": 120\n  },\n  \"payload\": 1700\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "status",
+            "description": "<p>Response status</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"status\": \"Load info updated\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/load.js",
+    "groupTitle": "Load"
+  },
+  {
+    "type": "delete",
     "url": "/trucks/:id",
     "title": "Delete truck",
     "name": "DeleteTrucks",
@@ -139,7 +466,7 @@ define({ "api": [
             "group": "Success 200",
             "type": "Number",
             "optional": false,
-            "field": "payload",
+            "field": "types.payload",
             "description": "<p>Truck payload</p>"
           }
         ]

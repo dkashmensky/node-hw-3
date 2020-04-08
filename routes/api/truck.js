@@ -61,7 +61,7 @@ router.put('/trucks/:id', (req, res) => {
  * @apiSuccess {Number} types.dimensions.width Truck width
  * @apiSuccess {String} types._id Unique truck type id
  * @apiSuccess {String} types.name Truck type name
- * @apiSuccess {Number} payload Truck payload
+ * @apiSuccess {Number} types.payload Truck payload
  * @apiSuccessExample {json} Success-Response:
  *  {
  *    "status": "Success",
