@@ -1,9 +1,9 @@
 [
   {
     "type": "delete",
-    "url": "/user/delete",
+    "url": "/users",
     "title": "Delete current user",
-    "name": "DeleteUserDelete",
+    "name": "DeleteUsers",
     "group": "User",
     "version": "0.1.0",
     "header": {
@@ -105,9 +105,117 @@
   },
   {
     "type": "get",
-    "url": "/user/all",
+    "url": "/users",
+    "title": "Get user info",
+    "name": "GetUsers",
+    "group": "User",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "id",
+            "description": "<p>Unique user ID</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": true,
+            "field": "fullname",
+            "description": "<p>User fullname</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "username",
+            "description": "<p>User login</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": true,
+            "field": "email",
+            "description": "<p>User email</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "string",
+            "allowedValues": [
+              "\"driver\"",
+              "\"shipper\""
+            ],
+            "optional": false,
+            "field": "type",
+            "description": "<p>User account type</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "avatar",
+            "description": "<p>User profile picture</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"id\": \"5e8dc57afc8873f6021967fa\",\n  \"fullname\": \"John Doe\",\n  \"username\": \"johndoe\",\n  \"email\": \"example@mail.com\",\n  \"type\": \"driver\",\n  \"avatar\": \"data:image/png;base64,long-string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "Error 5xx": [
+          {
+            "group": "Error 5xx",
+            "optional": false,
+            "field": "MongooseError",
+            "description": "<p>DB queries error</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"status\": \"MongooseError\",\n  \"error\": \"Error text\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/user.js",
+    "groupTitle": "User"
+  },
+  {
+    "type": "get",
+    "url": "/users/all",
     "title": "Request all users info",
-    "name": "GetApiUserAll",
+    "name": "GetUsersAll",
     "group": "User",
     "version": "0.1.0",
     "header": {
@@ -157,7 +265,14 @@
           {
             "group": "Success 200",
             "type": "String",
-            "optional": false,
+            "optional": true,
+            "field": "users.username",
+            "description": "<p>User login</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": true,
             "field": "users.email",
             "description": "<p>User email address</p>"
           },
@@ -184,7 +299,7 @@
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"users\": [\n    {\n      \"id\": 1,\n      \"fullname\": \"John Doe\",\n      \"email\": \"example@mail.com\",\n      \"type\": \"driver\",\n      \"avatar\": \"data:image/png;base64,long-string\"\n    }\n  ]\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"users\": [\n    {\n      \"id\": \"5e8dc57afc8873f6021967fa\",\n      \"fullname\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"email\": \"example@mail.com\",\n      \"type\": \"driver\",\n      \"avatar\": \"data:image/png;base64,long-string\"\n    }\n  ]\n}",
           "type": "json"
         }
       ]
@@ -225,10 +340,10 @@
     "groupTitle": "User"
   },
   {
-    "type": "get",
-    "url": "/user/profile",
-    "title": "Get user info",
-    "name": "GetUserProfile",
+    "type": "put",
+    "url": "/users",
+    "title": "Update user info",
+    "name": "PutUsers",
     "group": "User",
     "version": "0.1.0",
     "header": {
@@ -240,6 +355,13 @@
             "optional": false,
             "field": "Authorization",
             "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-type",
+            "description": "<p>Payload content type</p>"
           }
         ]
       },
@@ -248,179 +370,14 @@
           "title": "Header-Example:",
           "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
           "type": "json"
-        }
-      ]
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "Number",
-            "optional": false,
-            "field": "id",
-            "description": "<p>Unique user ID</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "fullname",
-            "description": "<p>User fullname</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "email",
-            "description": "<p>User email</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "string",
-            "allowedValues": [
-              "\"driver\"",
-              "\"shipper\""
-            ],
-            "optional": false,
-            "field": "type",
-            "description": "<p>User account type</p>"
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "avatar",
-            "description": "<p>User profile picture</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success-Response:",
-          "content": "{\n  \"id\": 1,\n  \"fullname\": \"John Doe\",\n  \"email\": \"example@mail.com\",\n  \"type\": \"driver\",\n  \"avatar\": \"data:image/png;base64,long-string\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "fields": {
-        "Error 5xx": [
-          {
-            "group": "Error 5xx",
-            "optional": false,
-            "field": "MongooseError",
-            "description": "<p>DB queries error</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"status\": \"MongooseError\",\n  \"error\": \"Error text\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "filename": "routes/api/user.js",
-    "groupTitle": "User"
-  },
-  {
-    "type": "post",
-    "url": "/login",
-    "title": "Login user",
-    "name": "PostLogin",
-    "group": "User",
-    "version": "0.1.0",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "username",
-            "description": "<p>User login</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "password",
-            "description": "<p>User password in plain text</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Request-Example:",
-          "content": "{\n \"username\": \"johndoe\",\n \"password\": \"p@ssw0rd\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "jwt_token",
-            "description": "<p>JWT token, used later to authenticate user, expires in 3 days</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success-Response",
-          "content": "HTTP/1.1 200 OK\n{\n \"jwt_token\": \"token_string\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "UserNotFound",
-            "description": "<p>Provided login or password are incorrect</p>"
-          }
-        ],
-        "Error 5xx": [
-          {
-            "group": "Error 5xx",
-            "optional": false,
-            "field": "MongooseError",
-            "description": "<p>DB queries error</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Login-Error:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n \"status\": \"UserNotFound\"\n}",
-          "type": "json"
         },
         {
-          "title": "Mongoose-Error:",
-          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"status\": \"MongooseError\",\n  \"error\": \"Error text\"\n}",
+          "title": "Content-Header-Example:",
+          "content": "{\n  \"Content-type\": \"application/json\"\n}",
           "type": "json"
         }
       ]
     },
-    "filename": "routes/api/login.js",
-    "groupTitle": "User"
-  },
-  {
-    "type": "post",
-    "url": "/register",
-    "title": "Register new user",
-    "name": "PostRegister",
-    "group": "User",
-    "version": "0.1.0",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -428,47 +385,22 @@
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "username",
-            "description": "<p>User login which will be used to log in</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
             "field": "fullname",
-            "description": "<p>User fullname</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "password",
-            "description": "<p>User password in plain text, at least 8 symbols, one lowercase, one uppercase, one digit are mandatory</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "allowedValues": [
-              "\"driver\"",
-              "\"shipper\""
-            ],
-            "optional": false,
-            "field": "type",
-            "description": "<p>User account type, two values only (driver or shipper)</p>"
+            "description": "<p>New user fullname</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "email",
-            "description": "<p>User email address</p>"
+            "description": "<p>New user email</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "{\n  \"username\": \"johndoe\",\n  \"fullname\": \"John Doe\",\n  \"password\": \"p@ssw0rd\",\n  \"type\": \"driver\",\n  \"email\": \"example@mail.com\"\n}",
+          "content": "{\n  \"fullname\": \"John Doe\",\n  \"email\": \"example@mail.com\"\n}",
           "type": "json"
         }
       ]
@@ -481,14 +413,14 @@
             "type": "String",
             "optional": false,
             "field": "status",
-            "description": "<p>UserRegistered returned on success with ID attribute, see example</p>"
+            "description": "<p>UserUpdated success status returned</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "{\n  \"status\": \"UserRegistered ID:123\"\n}",
+          "content": "{\n  \"status\": \"UserUpdated\"\n}",
           "type": "json"
         }
       ]
@@ -505,14 +437,8 @@
           {
             "group": "Error 4xx",
             "optional": false,
-            "field": "EmailExists",
-            "description": "<p>Provided email already exists in database</p>"
-          },
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "UsernameExists",
-            "description": "<p>Provided username already exists in database</p>"
+            "field": "DriverOnLoad",
+            "description": "<p>User could not change profile info while on load</p>"
           }
         ],
         "Error 5xx": [
@@ -526,35 +452,30 @@
       },
       "examples": [
         {
-          "title": "Validation Error:",
+          "title": "Validation-Error:",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"ValidationError\",\n  \"error\": \"\\\"email\\\" must be a valid email\"\n}",
           "type": "json"
         },
         {
-          "title": "Email-Error:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"EmailExists\"\n}",
+          "title": "Driver-Error:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"DriverOnLoad\"\n}",
           "type": "json"
         },
         {
-          "title": "Username-Error:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"UsernameExists\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Mongoose-Error:",
+          "title": "Error-Response:",
           "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"status\": \"MongooseError\",\n  \"error\": \"Error text\"\n}",
           "type": "json"
         }
       ]
     },
-    "filename": "routes/api/register.js",
+    "filename": "routes/api/user.js",
     "groupTitle": "User"
   },
   {
     "type": "put",
-    "url": "/user/avatar",
+    "url": "/users/avatar",
     "title": "Upload user profile pic",
-    "name": "PutUserAvatar",
+    "name": "PutUsersAvatar",
     "group": "User",
     "version": "0.1.0",
     "header": {
@@ -566,6 +487,13 @@
             "optional": false,
             "field": "Authorization",
             "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-type",
+            "description": "<p>Payload content type</p>"
           }
         ]
       },
@@ -573,6 +501,11 @@
         {
           "title": "Header-Example:",
           "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Content-Header-Example:",
+          "content": "{\n  \"Content-type\": \"application/json\"\n}",
           "type": "json"
         }
       ]
@@ -665,9 +598,9 @@
   },
   {
     "type": "put",
-    "url": "/user/password",
+    "url": "/users/password",
     "title": "Change user password",
-    "name": "PutUserPassword",
+    "name": "PutUsersPassword",
     "group": "User",
     "version": "0.1.0",
     "header": {
@@ -679,13 +612,25 @@
             "optional": false,
             "field": "Authorization",
             "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-type",
+            "description": "<p>Payload content type</p>"
           }
         ]
       },
       "examples": [
         {
-          "title": "Header-Example:",
+          "title": "Auth-Header-Example:",
           "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Content-Header-Example:",
+          "content": "{\n  \"Content-type\": \"application/json\"\n}",
           "type": "json"
         }
       ]
@@ -753,126 +698,6 @@
         {
           "title": "Validation-Error:",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"ValidationError\",\n  \"error\": \"\\\"password\\\" with value \\\"value\\\" fails to match the required pattern: /^[0-9a-zA-Z]{8,}$/\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 500 Internal Server Error\n{\n  \"status\": \"MongooseError\",\n  \"error\": \"Error text\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "filename": "routes/api/user.js",
-    "groupTitle": "User"
-  },
-  {
-    "type": "put",
-    "url": "/user/update",
-    "title": "Update user info",
-    "name": "PutUserUpdate",
-    "group": "User",
-    "version": "0.1.0",
-    "header": {
-      "fields": {
-        "Header": [
-          {
-            "group": "Header",
-            "type": "String",
-            "optional": false,
-            "field": "Authorization",
-            "description": "<p>Authorization type and token, see example (JWT used)</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Header-Example:",
-          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "fullname",
-            "description": "<p>New user fullname</p>"
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "email",
-            "description": "<p>New user email</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Request-Example:",
-          "content": "{\n  \"fullname\": \"John Doe\",\n  \"email\": \"example@mail.com\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "status",
-            "description": "<p>UserUpdated success status returned</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success-Response:",
-          "content": "{\n  \"status\": \"UserUpdated\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "ValidationError",
-            "description": "<p>Received data is not valid</p>"
-          },
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "DriverOnLoad",
-            "description": "<p>User could not change profile info while on load</p>"
-          }
-        ],
-        "Error 5xx": [
-          {
-            "group": "Error 5xx",
-            "optional": false,
-            "field": "MongooseError",
-            "description": "<p>DB queries error</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Validation-Error:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"ValidationError\",\n  \"error\": \"\\\"email\\\" must be a valid email\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Driver-Error:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"status\": \"DriverOnLoad\"\n}",
           "type": "json"
         },
         {
