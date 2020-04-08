@@ -1,6 +1,294 @@
 [
   {
     "type": "delete",
+    "url": "/trucks/:id",
+    "title": "Delete truck",
+    "name": "DeleteTrucks",
+    "group": "Truck",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "status",
+            "description": "<p>Response status</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"status\": \"Truck deleted successfully\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/truck.js",
+    "groupTitle": "Truck"
+  },
+  {
+    "type": "get",
+    "url": "/trucks/types",
+    "title": "Get truck types",
+    "name": "GetTrucksTypes",
+    "group": "Truck",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "status",
+            "description": "<p>Response status</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object[]",
+            "optional": false,
+            "field": "types",
+            "description": "<p>Truck types array</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Object",
+            "optional": false,
+            "field": "types.dimensions",
+            "description": "<p>Truck dimensions object</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "types.dimensions.length",
+            "description": "<p>Truck length</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "types.dimensions.height",
+            "description": "<p>Truck height</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "types.dimensions.width",
+            "description": "<p>Truck width</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "types._id",
+            "description": "<p>Unique truck type id</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "types.name",
+            "description": "<p>Truck type name</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "Number",
+            "optional": false,
+            "field": "payload",
+            "description": "<p>Truck payload</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"status\": \"Success\",\n  \"types\": [\n    {\n      \"dimensions\": {\n        \"length\": 150,\n        \"height\": 200,\n        \"width\": 120\n      },\n      \"_id\": \"5e7f624b1c9d4400002c1d84\",\n      \"name\": \"SPRINTER\",\n      \"payload\": 1700\n    }\n  ]\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/truck.js",
+    "groupTitle": "Truck"
+  },
+  {
+    "type": "patch",
+    "url": "/trucks/:id/unassign",
+    "title": "Unassign truck from driver",
+    "name": "PatchTrucksUnassign",
+    "group": "Truck",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "status",
+            "description": "<p>Response status</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"status\": \"Truck unassigned successfully\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/truck.js",
+    "groupTitle": "Truck"
+  },
+  {
+    "type": "put",
+    "url": "/trucks/:id",
+    "title": "Update truck info",
+    "name": "PutTrucks",
+    "group": "Truck",
+    "version": "0.1.0",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Authorization type and token, see example (JWT used)</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-type",
+            "description": "<p>Payload content type</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Header-Example:",
+          "content": "{\n  \"Authorization\": \"JWT token_string\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Content-Header-Example:",
+          "content": "{\n  \"Content-type\": \"application/json\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "comment",
+            "description": "<p>Custom comment for user's truck</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "{\n  \"comment\": \"This is my Sprinter type truck\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "status",
+            "description": "<p>Response status</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "{\n  \"status\": \"Truck info updated\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "routes/api/truck.js",
+    "groupTitle": "Truck"
+  },
+  {
+    "type": "delete",
     "url": "/users",
     "title": "Delete current user",
     "name": "DeleteUsers",
