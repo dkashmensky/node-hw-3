@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const mongoose = require('mongoose');
 const joi = require('@hapi/joi');
 const utils = require('../utils/utils');
@@ -23,55 +24,28 @@ module.exports.create_truck = (req, res) => {
     return;
   }
 
-  Truck.find({}, async (err, trucks) => {
-    if (err) {
+  const { type } = req.body;
+
+  TruckType.findOne({ name: type }, (truckError, truckType) => {
+    if (truckError) {
       res.status(500).json({
-        status: err,
+        status: truckError,
       });
       return;
     }
 
-    // eslint-disable-next-line camelcase
-    const { name, type_id } = req.body;
-    const truckNameIsUsed = utils.checkTruckName(trucks, name);
-    if (truckNameIsUsed) {
+    if (!TruckType) {
       res.status(400).json({
-        status: 'Truck name is already in use',
+        status: 'Truck type not found',
       });
+      return;
     }
 
-    const id = utils.getNewId(trucks);
-    let length;
-    let height;
-    let width;
-    let capacity;
-    let typeName;
-
-    await TruckType.findOne({ id: type_id }, (truckError, type) => {
-      if (truckError) {
-        res.status(500).json({
-          status: truckError,
-        });
-        return;
-      }
-
-      length = type.length;
-      height = type.height;
-      width = type.width;
-      capacity = type.capacity;
-      typeName = type.name;
-    });
-
     const newTruck = new Truck({
-      id,
-      name,
-      created_by: req.user.id,
-      type_id,
-      length,
-      height,
-      width,
-      capacity,
-      type_name: typeName,
+      created_by: req.user._id,
+      dimensions: truckType.dimensions,
+      payload: truckType.payload,
+      type: truckType.name,
     });
 
     newTruck.save((error, truck) => {
@@ -82,9 +56,12 @@ module.exports.create_truck = (req, res) => {
         return;
       }
 
-      res.status(200).json(truck);
+      res.status(200).json({
+        status: 'Truck created successfully',
+      });
       console.log(
-        `Created: Truck. ID: ${truck.id}. Created by: ${truck.created_by}`
+        // eslint-disable-next-line no-underscore-dangle
+        `Created: Truck. ID: ${truck._id}. Created by: ${truck.created_by}`
       );
     });
   });
@@ -99,7 +76,10 @@ module.exports.get_truck_types = (req, res) => {
       return;
     }
 
-    res.status(200).json(types);
+    res.status(200).json({
+      status: 'Success',
+      types,
+    });
   });
 };
 
@@ -111,7 +91,7 @@ module.exports.get_user_trucks = (req, res) => {
     return;
   }
 
-  Truck.find({ created_by: req.user.id }, (err, trucks) => {
+  Truck.find({ created_by: req.user._id }, (err, trucks) => {
     if (err) {
       res.status(500).json({
         status: err,
@@ -119,7 +99,10 @@ module.exports.get_user_trucks = (req, res) => {
       return;
     }
 
-    res.status(200).json(trucks);
+    res.status(200).json({
+      status: 'Success',
+      trucks,
+    });
   });
 };
 
@@ -131,7 +114,12 @@ module.exports.update_truck_info = (req, res) => {
     return;
   }
 
-  const validation = validateSchemas.update_truck_schema.validate(req.body);
+  const reqData = {
+    id: req.params.id,
+    comment: req.body.comment,
+  };
+
+  const validation = validateSchemas.update_truck_schema.validate(reqData);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -139,59 +127,39 @@ module.exports.update_truck_info = (req, res) => {
     return;
   }
 
-  Truck.find({ created_by: req.user.id, assigned_to: 0 }, (err, trucks) => {
-    if (err) {
-      res.status(500).json({
-        status: err,
-      });
-      return;
-    }
-
-    // eslint-disable-next-line camelcase
-    const { id, name, type_id } = req.body;
-    const truckNameIsUsed = utils.checkTruckName(trucks, name);
-    if (truckNameIsUsed) {
-      res.status(400).json({
-        status: 'Truck name is already in use',
-      });
-      return;
-    }
-
-    Truck.findOneAndUpdate(
-      {
-        id,
-        created_by: req.user.id,
-        assigned_to: 0,
-      },
-      {
-        name,
-        type_id,
-      },
-      (error, truck) => {
-        if (error) {
-          res.status(500).json({
-            status: error,
-          });
-          return;
-        }
-
-        if (!truck) {
-          res.status(500).json({
-            status:
-              'Unable to update truck info. Please make sure it is not assigned to a driver',
-          });
-          return;
-        }
-
-        res.status(200).json({
-          status: 'Truck info updated',
+  Truck.findOneAndUpdate(
+    {
+      _id: reqData.id,
+      created_by: req.user._id,
+      assigned_to: '',
+    },
+    {
+      comment: reqData.comment,
+    },
+    (error, truck) => {
+      if (error) {
+        res.status(500).json({
+          status: error,
         });
-        console.log(
-          `Updated: Truck. ID: ${truck.id}. Updated by: ${req.user.id}`
-        );
+        return;
       }
-    );
-  });
+
+      if (!truck) {
+        res.status(500).json({
+          status:
+            'Unable to update truck info. Make sure it is not assigned to a driver',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        status: 'Truck info updated',
+      });
+      console.log(
+        `Updated: Truck. ID: ${truck.id}. Updated by: ${req.user._id}`
+      );
+    }
+  );
 };
 
 module.exports.delete_truck = (req, res) => {
@@ -202,7 +170,7 @@ module.exports.delete_truck = (req, res) => {
     return;
   }
 
-  const validation = validateSchemas.check_id.validate(req.body);
+  const validation = validateSchemas.check_id.validate(req.params);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -212,9 +180,9 @@ module.exports.delete_truck = (req, res) => {
 
   Truck.findOneAndDelete(
     {
-      id: req.body.id,
-      created_by: req.user.id,
-      assigned_to: 0,
+      _id: req.params.id,
+      created_by: req.user._id,
+      assigned_to: '',
     },
     (err, truck) => {
       if (err) {
@@ -227,7 +195,7 @@ module.exports.delete_truck = (req, res) => {
       if (!truck) {
         res.status(400).json({
           status:
-            'Unable to delete the truck. Please make sure truck exists and is unassigned',
+            'Unable to delete the truck. Make sure it exists and is unassigned',
         });
         return;
       }
@@ -236,7 +204,8 @@ module.exports.delete_truck = (req, res) => {
         status: 'Truck deleted successfully',
       });
       console.log(
-        `Deleted: Truck. ID: ${truck.id}. Deleted by: ${req.user.id}`
+        // eslint-disable-next-line no-underscore-dangle
+        `Deleted: Truck. ID: ${truck._id}. Deleted by: ${req.user._id}`
       );
     }
   );
@@ -250,7 +219,7 @@ module.exports.assign_truck = (req, res) => {
     return;
   }
 
-  const validation = validateSchemas.check_id.validate(req.body);
+  const validation = validateSchemas.check_id.validate(req.params);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -258,7 +227,7 @@ module.exports.assign_truck = (req, res) => {
     return;
   }
 
-  Truck.findOne({ assigned_to: req.user.id }, (err, truck) => {
+  Truck.findOne({ assigned_to: req.user._id }, (err, truck) => {
     if (err) {
       res.status(500).json({
         status: err,
@@ -275,11 +244,11 @@ module.exports.assign_truck = (req, res) => {
 
     Truck.findOneAndUpdate(
       {
-        id: req.body.id,
-        assigned_to: 0,
+        _id: req.params.id,
+        assigned_to: '',
       },
       {
-        assigned_to: req.user.id,
+        assigned_to: req.user._id,
       },
       (error, upTruck) => {
         if (error) {
@@ -289,11 +258,18 @@ module.exports.assign_truck = (req, res) => {
           return;
         }
 
+        if (!upTruck) {
+          res.status(400).json({
+            status: 'Truck already assigned',
+          });
+          return;
+        }
+
         res.status(200).json({
-          status: `Truck ${upTruck.id} assigned to user ${req.user.id}`,
+          status: 'Truck assigned successfully',
         });
         console.log(
-          `Truck ID: ${upTruck.id} assigned to driver ID: ${upTruck.assigned_to}. Updated by: ${req.user.id}`
+          `Truck ID: ${upTruck._id} assigned to driver ID: ${upTruck.assigned_to}. Updated by: ${req.user._id}`
         );
       }
     );
@@ -308,7 +284,7 @@ module.exports.unassign_truck = (req, res) => {
     return;
   }
 
-  const validation = validateSchemas.check_id.validate(req.body);
+  const validation = validateSchemas.check_id.validate(req.params);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -318,7 +294,7 @@ module.exports.unassign_truck = (req, res) => {
 
   Load.findOne(
     {
-      assigned_to: req.user.id,
+      assigned_to: req.user._id,
       status: { $ne: 'shipped' },
     },
     (error, load) => {
@@ -338,11 +314,11 @@ module.exports.unassign_truck = (req, res) => {
 
       Truck.findOneAndUpdate(
         {
-          id: req.body.id,
-          assigned_to: req.user.id,
+          _id: req.params.id,
+          assigned_to: req.user._id,
         },
         {
-          assigned_to: 0,
+          assigned_to: '',
         },
         (err, truck) => {
           if (err) {
@@ -361,10 +337,10 @@ module.exports.unassign_truck = (req, res) => {
           }
 
           res.status(200).json({
-            status: `Truck ${truck.id} unassigned from driver ${req.user.id}`,
+            status: `Truck unassigned successfully`,
           });
           console.log(
-            `Truck ID: ${truck.id} unassigned from driver ID: ${truck.assigned_to}. Updated by: ${req.user.id}`
+            `Truck ID: ${truck._id} unassigned from driver ID: ${truck.assigned_to}. Updated by: ${req.user._id}`
           );
         }
       );

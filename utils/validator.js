@@ -7,16 +7,13 @@ module.exports.create_user_schema = joi.object({
     .min(3)
     .max(30)
     .required(),
-  fullname: joi.string().required(),
-  email: joi
-    .string()
-    .email({ minDomainSegments: 2 })
-    .required(),
+  fullname: joi.string(),
+  email: joi.string().email({ minDomainSegments: 2 }),
   password: joi
     .string()
     .pattern(new RegExp('^[0-9a-zA-Z]{8,}$'))
     .required(),
-  type: joi
+  role: joi
     .string()
     .valid('driver', 'shipper')
     .required(),
@@ -30,90 +27,64 @@ module.exports.change_pass_schema = joi.object({
 });
 
 module.exports.update_user_schema = joi.object({
-  fullname: joi.string().required(),
-  email: joi
-    .string()
-    .email({ minDomainSegments: 2 })
-    .required(),
+  fullname: joi.string(),
+  email: joi.string().email({ minDomainSegments: 2 }),
 });
 
 module.exports.create_truck_schema = joi.object({
-  name: joi
+  type: joi
     .string()
-    .alphanum()
-    .min(3),
-  type_id: joi
-    .number()
-    .min(1)
-    .max(3),
+    .valid('SPRINTER', 'SMALL STRAIGHT', 'LARGE STRAIGHT')
+    .required(),
 });
 
 module.exports.update_truck_schema = joi.object({
-  id: joi.number().min(1),
-  name: joi
-    .string()
-    .alphanum()
-    .min(3),
-  type_id: joi
-    .number()
-    .min(1)
-    .max(3),
+  id: joi.string().required(),
+  comment: joi.string(),
 });
 
 module.exports.check_id = joi.object({
-  id: joi
-    .number()
-    .min(1)
-    .required(),
+  id: joi.string().required(),
 });
 
 module.exports.create_load_schema = joi.object({
-  name: joi
-    .string()
-    .alphanum()
-    .min(3)
-    .required(),
-  length: joi
-    .number()
-    .min(1)
-    .required(),
-  height: joi
-    .number()
-    .min(1)
-    .required(),
-  width: joi
-    .number()
-    .min(1)
-    .required(),
-  capacity: joi
+  dimensions: {
+    length: joi
+      .number()
+      .min(1)
+      .required(),
+    height: joi
+      .number()
+      .min(1)
+      .required(),
+    width: joi
+      .number()
+      .min(1)
+      .required(),
+  },
+  payload: joi
     .number()
     .min(1)
     .required(),
 });
 
 module.exports.update_load_schema = joi.object({
-  id: joi
-    .number()
-    .min(1)
-    .required(),
-  name: joi
-    .string()
-    .alphanum()
-    .min(3)
-    .required(),
-  length: joi
-    .number()
-    .min(1)
-    .required(),
-  height: joi
-    .number()
-    .min(1)
-    .required(),
-  width: joi
-    .number()
-    .min(1)
-    .required(),
-  capacity: joi
+  id: joi.string().required(),
+  dimensions: {
+    length: joi
+      .number()
+      .min(1)
+      .required(),
+    height: joi
+      .number()
+      .min(1)
+      .required(),
+    width: joi
+      .number()
+      .min(1)
+      .required(),
+  },
+  payload: joi
     .number()
     .min(1)
     .required(),

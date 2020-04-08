@@ -10,8 +10,7 @@ const Loads = require('./models/load.model');
 const app = express();
 
 // Router
-const loginRouter = require('./routes/api/login');
-const registerRouter = require('./routes/api/register');
+const authRouter = require('./routes/api/auth');
 const userRouter = require('./routes/api/user');
 const truckRouter = require('./routes/api/truck');
 const loadRouter = require('./routes/api/load');
@@ -31,8 +30,7 @@ app.use(express.json());
 app.use(headers);
 app.use(logger);
 
-app.use('/api', loginRouter);
-app.use('/api', registerRouter);
+app.use('/api', authRouter);
 
 app.use(auth);
 

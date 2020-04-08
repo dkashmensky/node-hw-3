@@ -2,14 +2,15 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const { secret } = require('config');
+const userController = require('../../controllers/user.controller');
 
 const User = mongoose.model('Users');
 const router = express.Router();
 
 // eslint-disable-next-line import/no-unresolved
-const { secret } = require('config');
 
-router.post('/login', (req, res) => {
+router.post('/auth/login', (req, res) => {
   User.find({}, (err, users) => {
     if (err) {
       res.status(500).json({
@@ -38,10 +39,15 @@ router.post('/login', (req, res) => {
       expiresIn: 259200, // 3 days
     });
     res.json({
-      jwt_token: token,
+      status: 'User authenticated successfully',
+      token,
     });
     res.header();
   });
+});
+
+router.post('/auth/register', (req, res) => {
+  userController.create_user(req, res);
 });
 
 module.exports = router;

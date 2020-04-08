@@ -2,53 +2,48 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
+function allowEmptyString() {
+  return typeof this.assigned_to === 'string';
+}
+
 const TruckSchema = new Schema({
-  id: {
-    type: Number,
-    required: true,
-  },
-  name: {
+  created_by: {
     type: String,
     required: true,
   },
-  created_by: {
-    type: Number,
-    required: true,
-  },
   assigned_to: {
-    type: Number,
-    required: true,
-    default: 0,
+    type: String,
+    required: allowEmptyString(),
+    default: '',
   },
   status: {
     type: String,
     required: true,
     default: 'IS',
   },
-  type_id: {
-    type: Number,
-    required: true,
-  },
-  length: {
-    type: Number,
-    required: true,
-  },
-  height: {
-    type: Number,
-    required: true,
-  },
-  width: {
-    type: Number,
-    required: true,
-  },
-  type_name: {
+  type: {
     type: String,
     required: true,
   },
-  capacity: {
+  payload: {
     type: Number,
     required: true,
   },
+  dimensions: {
+    length: {
+      type: Number,
+      required: true,
+    },
+    height: {
+      type: Number,
+      required: true,
+    },
+    width: {
+      type: Number,
+      required: true,
+    },
+  },
+  comment: String,
 });
 
 module.exports = mongoose.model('Trucks', TruckSchema);

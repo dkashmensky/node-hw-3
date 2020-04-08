@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable camelcase */
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
@@ -29,8 +30,9 @@ module.exports.get_users = (req, res) => {
       }
 
       return {
-        id: item.id,
+        id: item._id,
         fullname: item.fullname,
+        username: item.username,
         email: item.email,
         type: item.type,
         avatar,
@@ -60,15 +62,7 @@ module.exports.create_user = (req, res) => {
       return;
     }
 
-    const { username, fullname, email, password, type } = req.body;
-
-    const emailExists = utils.checkEmail(users, email);
-    if (emailExists) {
-      res.status(400).json({
-        status: 'EmailExists',
-      });
-      return;
-    }
+    const { username, fullname, email, password, role } = req.body;
 
     const usernameExists = utils.checkUsername(users, username);
     if (usernameExists) {
@@ -78,15 +72,12 @@ module.exports.create_user = (req, res) => {
       return;
     }
 
-    const id = utils.getNewId(users);
-
     const newUser = new User({
-      id,
       username,
       fullname,
       password: bcrypt.hashSync(password, saltRounds),
       email,
-      type,
+      type: role,
     });
 
     newUser.save(async (error, user) => {
@@ -99,10 +90,13 @@ module.exports.create_user = (req, res) => {
       }
 
       res.status(200).json({
-        status: `UserRegistered ID:${id}`,
+        status: 'User registered successfully',
       });
 
-      utils.send_mail('register', user, user.email);
+      // email is now optional
+      if (email) {
+        utils.send_mail('register', user, user.email);
+      }
     });
   });
 };
@@ -119,7 +113,7 @@ module.exports.update_user_info = (req, res) => {
 
   if (req.user.type === 'driver') {
     Load.findOne(
-      { assigned_to: req.user.id, state: { $ne: 'shipped' } },
+      { assigned_to: req.user._id, state: { $ne: 'shipped' } },
       (err, load) => {
         if (err) {
           res.status(500).json({
@@ -139,7 +133,7 @@ module.exports.update_user_info = (req, res) => {
         const { fullname, email } = req.body;
 
         User.findOneAndUpdate(
-          { id: req.user.id },
+          { _id: req.user._id },
           { fullname, email },
           (error, user) => {
             if (error) {
@@ -163,7 +157,7 @@ module.exports.update_user_info = (req, res) => {
   const { fullname, email } = req.body;
 
   User.findOneAndUpdate(
-    { id: req.user.id },
+    { _id: req.user._id },
     { fullname, email },
     (error, user) => {
       if (error) {
@@ -182,7 +176,7 @@ module.exports.update_user_info = (req, res) => {
 };
 
 module.exports.get_user_info = (req, res) => {
-  User.findOne({ id: req.user.id }, (err, user) => {
+  User.findOne({ _id: req.user._id }, (err, user) => {
     if (err) {
       res.status(500).json({
         status: 'MongooseError',
@@ -191,7 +185,7 @@ module.exports.get_user_info = (req, res) => {
       return;
     }
 
-    const { id, fullname, email, type, avatar, avatar_info } = user;
+    const { _id, fullname, username, email, type, avatar, avatar_info } = user;
 
     let profilePhoto;
     try {
@@ -201,8 +195,9 @@ module.exports.get_user_info = (req, res) => {
     }
 
     res.json({
-      id,
+      id: _id,
       fullname,
+      username,
       email,
       type,
       avatar: profilePhoto,
@@ -221,7 +216,7 @@ module.exports.change_user_password = (req, res) => {
   }
 
   User.findOneAndUpdate(
-    { id: req.user.id },
+    { _id: req.user._id },
     { password: bcrypt.hashSync(req.body.password, saltRounds) },
     (err, user) => {
       if (err) {
@@ -243,7 +238,7 @@ module.exports.change_user_password = (req, res) => {
 
 module.exports.delete_user = (req, res) => {
   if (req.user.type === 'driver') {
-    Truck.findOne({ assigned_to: req.user.id }, (err, truck) => {
+    Truck.findOne({ assigned_to: req.user._id }, (err, truck) => {
       if (err) {
         res.status(500).json({
           status: 'MongooseError',
@@ -259,7 +254,7 @@ module.exports.delete_user = (req, res) => {
         return;
       }
 
-      User.findOneAndDelete({ id: req.user.id }, async (error, user) => {
+      User.findOneAndDelete({ _id: req.user._id }, async (error, user) => {
         if (error) {
           res.status(500).json({
             status: 'MongooseError',
@@ -275,7 +270,7 @@ module.exports.delete_user = (req, res) => {
           return;
         }
 
-        await Truck.deleteMany({ created_by: user.id }, errorTruck => {
+        await Truck.deleteMany({ created_by: user._id }, errorTruck => {
           if (errorTruck) {
             res.status(500).json({
               status: 'MongooseError',
@@ -292,7 +287,7 @@ module.exports.delete_user = (req, res) => {
   } else {
     Load.findOne(
       {
-        created_by: req.user.id,
+        created_by: req.user._id,
         status: { $or: [{ $ne: 'new' }, { $ne: 'shipped' }] },
       },
       (err, load) => {
@@ -311,7 +306,7 @@ module.exports.delete_user = (req, res) => {
           return;
         }
 
-        User.findOneAndDelete({ id: req.user.id }, async (error, user) => {
+        User.findOneAndDelete({ _id: req.user._id }, async (error, user) => {
           if (error) {
             res.status(500).json({
               status: 'MongooseError',
@@ -327,7 +322,7 @@ module.exports.delete_user = (req, res) => {
             return;
           }
 
-          await Load.deleteMany({ created_by: user.id }, errorTruck => {
+          await Load.deleteMany({ created_by: user._id }, errorTruck => {
             if (errorTruck) {
               res.status(500).json({
                 status: 'MongooseError',
@@ -371,7 +366,7 @@ module.exports.upload_avatar = (req, res) => {
   }
 
   User.findOneAndUpdate(
-    { id: req.user.id },
+    { _id: req.user._id },
     { avatar: userAvatar, avatar_info: avatarInfo },
     (err, user) => {
       if (err) {

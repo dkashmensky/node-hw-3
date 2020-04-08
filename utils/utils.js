@@ -4,14 +4,6 @@ const nodemailer = require('nodemailer');
 const config = require('config');
 const mailTypes = require('../config/email_types');
 
-module.exports.getNewId = data => {
-  if (data && data.length) {
-    data.sort((a, b) => b.id - a.id);
-    return data[0].id + 1;
-  }
-  return 1;
-};
-
 module.exports.checkEmail = (users, email) => {
   return users.find(item => item.email === email);
 };

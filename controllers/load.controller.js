@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const mongoose = require('mongoose');
 const joi = require('@hapi/joi');
 const utils = require('../utils/utils');
@@ -23,51 +24,32 @@ module.exports.create_load = (req, res) => {
     return;
   }
 
-  Load.find({}, (err, loads) => {
-    if (err) {
+  const { dimensions, payload } = req.body;
+
+  const newLoad = new Load({
+    dimensions,
+    payload,
+    created_by: req.user._id,
+  });
+
+  newLoad.save((error, load) => {
+    if (error) {
       res.status(500).json({
-        status: err,
+        status: error,
       });
       return;
     }
 
-    const { name, length, height, width, capacity } = req.body;
-    const id = utils.getNewId(loads);
-
-    const newLoad = new Load({
-      id,
-      name,
-      length,
-      height,
-      width,
-      capacity,
-      created_by: req.user.id,
+    res.status(200).json({
+      status: 'Load created successfully',
     });
-
-    newLoad.save((error, load) => {
-      if (error) {
-        res.status(500).json({
-          status: error,
-        });
-        return;
-      }
-
-      res.status(200).json(load);
-      console.log(
-        `Created: Load. ID: ${load.id}. Created by: ${load.created_by}`
-      );
-    });
+    console.log(
+      `Created: Load. ID: ${load._id}. Created by: ${load.created_by}`
+    );
   });
 };
 
 module.exports.get_loads = (req, res) => {
-  if (req.user.type !== 'shipper') {
-    res.status(400).json({
-      status: 'User is not a shipper',
-    });
-    return;
-  }
-
   const validation = validateSchemas.get_loads_schema.validate(req.body);
   if (validation.error) {
     res.status(400).json({
@@ -76,10 +58,11 @@ module.exports.get_loads = (req, res) => {
     return;
   }
 
+  const userType = req.user.type === 'shipper' ? 'created_by' : 'assigned_to';
   const { status } = req.body;
 
   if (status) {
-    Load.find({ created_by: req.user.id, status }, (err, loads) => {
+    Load.find({ [userType]: req.user._id, status }, (err, loads) => {
       if (err) {
         res.status(500).json({
           status: err,
@@ -87,10 +70,13 @@ module.exports.get_loads = (req, res) => {
         return;
       }
 
-      res.status(200).json(loads);
+      res.status(200).json({
+        status: 'Success',
+        loads,
+      });
     });
   } else {
-    Load.find({ created_by: req.user.id }, (err, loads) => {
+    Load.find({ [userType]: req.user._id }, (err, loads) => {
       if (err) {
         res.status(500).json({
           status: err,
@@ -98,7 +84,10 @@ module.exports.get_loads = (req, res) => {
         return;
       }
 
-      res.status(200).json(loads);
+      res.status(200).json({
+        status: 'Success',
+        loads,
+      });
     });
   }
 };
@@ -111,7 +100,13 @@ module.exports.update_load = (req, res) => {
     return;
   }
 
-  const validation = validateSchemas.update_load_schema.validate(req.body);
+  const reqData = {
+    id: req.params.id,
+    dimensions: req.body.dimensions,
+    payload: req.body.payload,
+  };
+
+  const validation = validateSchemas.update_load_schema.validate(reqData);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -119,11 +114,17 @@ module.exports.update_load = (req, res) => {
     return;
   }
 
-  const { id, name, length, height, width, capacity } = req.body;
-
   Load.findOneAndUpdate(
-    { id, created_by: req.user.id, status: 'new', assigned_to: 0 },
-    { name, length, height, width, capacity },
+    {
+      _id: reqData.id,
+      created_by: req.user._id,
+      status: 'new',
+      assigned_to: '',
+    },
+    {
+      dimensions: reqData.dimensions,
+      payload: reqData.payload,
+    },
     (err, load) => {
       if (err) {
         res.status(500).json({
@@ -143,7 +144,9 @@ module.exports.update_load = (req, res) => {
       res.status(200).json({
         status: 'Load info updated',
       });
-      console.log(`Updated: Load. ID: ${load.id}. Updated by: ${req.user.id}`);
+      console.log(
+        `Updated: Load. ID: ${load._id}. Updated by: ${req.user._id}`
+      );
     }
   );
 };
@@ -156,7 +159,7 @@ module.exports.delete_load = (req, res) => {
     return;
   }
 
-  const validation = validateSchemas.check_id.validate(req.body);
+  const validation = validateSchemas.check_id.validate(req.params);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -165,7 +168,12 @@ module.exports.delete_load = (req, res) => {
   }
 
   Load.findOneAndDelete(
-    { id: req.body.id, created_by: req.user.id, status: 'new', assigned_to: 0 },
+    {
+      _id: req.params.id,
+      created_by: req.user._id,
+      status: 'new',
+      assigned_to: '',
+    },
     (err, load) => {
       if (err) {
         res.status(500).json({
@@ -185,7 +193,9 @@ module.exports.delete_load = (req, res) => {
       res.status(200).json({
         status: 'Load deleted successfully',
       });
-      console.log(`Deleted: Load. ID: ${load.id}. Deleted by: ${req.user.id}`);
+      console.log(
+        `Deleted: Load. ID: ${load._id}. Deleted by: ${req.user._id}`
+      );
     }
   );
 };
@@ -198,7 +208,7 @@ module.exports.post_load = (req, res) => {
     return;
   }
 
-  const validation = validateSchemas.check_id.validate(req.body);
+  const validation = validateSchemas.check_id.validate(req.params);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -208,8 +218,8 @@ module.exports.post_load = (req, res) => {
 
   Load.findOneAndUpdate(
     {
-      id: req.body.id,
-      created_by: req.user.id,
+      _id: req.params.id,
+      created_by: req.user._id,
       status: 'new',
     },
     {
@@ -231,17 +241,17 @@ module.exports.post_load = (req, res) => {
       }
 
       console.log(
-        `Load status changed to posted. ID: ${load.id}. Updated by: ${req.user.id}`
+        `Load status changed to posted. ID: ${load._id}. Updated by: ${req.user._id}`
       );
 
-      const { height, length, width, capacity } = load;
+      const { dimensions, payload } = load;
       Truck.findOneAndUpdate(
         {
-          height: { $gte: height },
-          length: { $gte: length },
-          width: { $gte: width },
-          capacity: { $gte: capacity },
-          assigned_to: { $ne: 0 },
+          'dimensions.length': { $gte: dimensions.length },
+          'dimensions.height': { $gte: dimensions.height },
+          'dimensions.width': { $gte: dimensions.width },
+          payload: { $gte: payload },
+          assigned_to: { $ne: '' },
           status: 'IS',
         },
         {
@@ -257,7 +267,7 @@ module.exports.post_load = (req, res) => {
 
           if (!truck) {
             Load.findOneAndUpdate(
-              { id: load.id },
+              { _id: load._id },
               {
                 status: 'new',
                 $addToSet: {
@@ -279,13 +289,13 @@ module.exports.post_load = (req, res) => {
               status: 'Unable to find suitable truck',
             });
             console.log(
-              `Load status changed to new. ID: ${load.id}. Updated by: ${req.user.id}`
+              `Load status changed to new. ID: ${load._id}. Updated by: ${req.user._id}`
             );
             return;
           }
 
           Load.findOneAndUpdate(
-            { id: load.id },
+            { _id: load._id },
             {
               assigned_to: truck.assigned_to,
               status: 'assigned',
@@ -306,32 +316,33 @@ module.exports.post_load = (req, res) => {
               }
 
               res.status(200).json({
-                status: `Load has been successfully assigned to driver ${truck.assigned_to}`,
+                status: 'Load posted successfully',
+                assigned_to: truck.assigned_to,
               });
 
               console.log(
-                `Load status changed to assigned. ID: ${assignedLoad.id}. Updated by: ${req.user.id}`
+                `Load status changed to assigned. ID: ${assignedLoad._id}. Updated by: ${req.user._id}`
               );
               console.log(
-                `Load assigned to driver ${truck.assigned_to}. ID: ${assignedLoad.id}. Updated by: ${req.user.id}`
+                `Load assigned to driver ${truck.assigned_to}. ID: ${assignedLoad._id}. Updated by: ${req.user._id}`
               );
 
-              const emailData = {
-                user_fullname: req.user.fullname,
-                load_name: assignedLoad.name,
-                load_id: assignedLoad.id,
-                driver_id: truck.assigned_to,
-                truck_name: truck.name,
-                load_state: 'En route to pick up',
-              };
+              if (req.user.email) {
+                const emailData = {
+                  user_fullname: req.user.fullname,
+                  load_name: assignedLoad.name,
+                  load_id: assignedLoad.id,
+                  driver_id: truck.assigned_to,
+                  truck_name: truck.name,
+                  load_state: 'En route to pick up',
+                };
 
-              if (!req.user.email) {
+                utils.send_mail('load_assigned', emailData, req.user.email);
+              } else {
                 console.log(
-                  `Mail sending failed in load assign. Load ID: ${assignedLoad.id}`
+                  `Sending email notification to user with ID: ${req.user._id} failed - email not found`
                 );
-                return;
               }
-              utils.send_mail('load_assigned', emailData, req.user.email);
             }
           );
         }
@@ -341,7 +352,7 @@ module.exports.post_load = (req, res) => {
 };
 
 module.exports.get_load_info = (req, res) => {
-  const validation = validateSchemas.check_id.validate(req.body);
+  const validation = validateSchemas.check_id.validate(req.params);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -349,7 +360,7 @@ module.exports.get_load_info = (req, res) => {
     return;
   }
 
-  Load.findOne({ id: req.body.id }, (err, load) => {
+  Load.findOne({ _id: req.params.id }, (err, load) => {
     if (err) {
       res.status(500).json({
         status: err,
@@ -364,7 +375,10 @@ module.exports.get_load_info = (req, res) => {
       return;
     }
 
-    res.status(200).json(load);
+    res.status(200).json({
+      status: 'Success',
+      load,
+    });
   });
 };
 
@@ -376,7 +390,7 @@ module.exports.change_load_state = (req, res) => {
     return;
   }
 
-  const validation = validateSchemas.check_id.validate(req.body);
+  const validation = validateSchemas.check_id.validate(req.params);
   if (validation.error) {
     res.status(400).json({
       status: validation.error.details[0].message,
@@ -385,7 +399,7 @@ module.exports.change_load_state = (req, res) => {
   }
 
   Load.findOne(
-    { id: req.body.id, assigned_to: req.user.id, status: 'assigned' },
+    { _id: req.params.id, assigned_to: req.user._id, status: 'assigned' },
     (err, load) => {
       if (err) {
         res.status(500).json({
@@ -411,7 +425,7 @@ module.exports.change_load_state = (req, res) => {
 
       Load.findOneAndUpdate(
         {
-          id: load.id,
+          _id: load._id,
           assigned_to: load.assigned_to,
         },
         {
@@ -440,7 +454,7 @@ module.exports.change_load_state = (req, res) => {
 
           if (newState === 'Arrived to delivery') {
             await Load.findOneAndUpdate(
-              { id: updatedLoad.id },
+              { _id: updatedLoad._id },
               {
                 status: 'shipped',
                 $addToSet: {
@@ -459,20 +473,20 @@ module.exports.change_load_state = (req, res) => {
                 }
 
                 console.log(
-                  `Load has been shipped by driver ID: ${load.assigned_to}. ID: ${load.id}. Updated by: ${req.user.id}`
+                  `Load has been shipped by driver ID: ${load.assigned_to}. ID: ${load._id}. Updated by: ${req.user._id}`
                 );
 
                 const mailData = {
                   owner_email: '',
                   owner_fullname: '',
                   driver_email: req.user.email,
-                  driver_id: req.user.id,
-                  load_id: shipLoad.id,
+                  driver_id: req.user._id,
+                  load_id: shipLoad._id,
                   load_name: shipLoad.name,
                 };
 
                 await User.findOne(
-                  { id: shipLoad.created_by },
+                  { _id: shipLoad.created_by },
                   (userErr, user) => {
                     if (userErr) {
                       res.status(500).json({
@@ -486,37 +500,35 @@ module.exports.change_load_state = (req, res) => {
                   }
                 );
 
-                if (!mailData.owner_email) {
-                  console.log(
-                    `Mail sending failed in shipping finish (shipper). Load ID: ${shipLoad.id}`
+                if (mailData.owner_email) {
+                  utils.send_mail(
+                    'load_shipped_shipper',
+                    mailData,
+                    mailData.owner_email
                   );
-                  return;
+                } else {
+                  console.log(
+                    `Sending email notification to user with ID: ${shipLoad.created_by} failed - email not found`
+                  );
                 }
-
-                utils.send_mail(
-                  'load_shipped_shipper',
-                  mailData,
-                  mailData.owner_email
-                );
 
                 if (!mailData.driver_email) {
-                  console.log(
-                    `Mail sending failed in shipping finish (driver). Load ID: ${shipLoad.id}`
+                  utils.send_mail(
+                    'load_shipped_driver',
+                    mailData,
+                    mailData.driver_email
                   );
-                  return;
+                } else {
+                  console.log(
+                    `Sending email notification to user with ID: ${req.user._id} failed - email not found`
+                  );
                 }
-
-                utils.send_mail(
-                  'load_shipped_driver',
-                  mailData,
-                  mailData.driver_email
-                );
               }
             );
 
             await Truck.findOneAndUpdate(
               {
-                assigned_to: req.user.id,
+                assigned_to: req.user._id,
               },
               {
                 status: 'IS',
@@ -532,23 +544,23 @@ module.exports.change_load_state = (req, res) => {
           }
 
           res.status(200).json({
-            status: 'Load state changed',
+            status: 'Load status changed successfully',
           });
 
           console.log(
-            `Load state changed to ${newState}. ID: ${load.id}. Updated by: ${req.user.id}`
+            `Load state changed to ${newState}. ID: ${load._id}. Updated by: ${req.user._id}`
           );
 
           const mailData = {
             owner_fullname: '',
             owner_email: '',
             load_name: updatedLoad.name,
-            load_id: updatedLoad.id,
+            load_id: updatedLoad._id,
             load_state: newState,
           };
 
           await User.findOne(
-            { id: updatedLoad.created_by },
+            { _id: updatedLoad.created_by },
             (userErr, user) => {
               if (userErr) {
                 res.status(500).json({
@@ -562,14 +574,17 @@ module.exports.change_load_state = (req, res) => {
             }
           );
 
-          if (!mailData.owner_email) {
-            console.log(
-              `Mail sending failed in state change. Load ID: ${load.id}`
+          if (mailData.owner_email) {
+            utils.send_mail(
+              'load_state_change',
+              mailData,
+              mailData.owner_email
             );
-            return;
+          } else {
+            console.log(
+              `Sending email notification to user with ID: ${updatedLoad.created_by} failed - email not found`
+            );
           }
-
-          utils.send_mail('load_state_change', mailData, mailData.owner_email);
         }
       );
     }

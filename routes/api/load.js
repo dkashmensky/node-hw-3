@@ -3,31 +3,31 @@ const loadController = require('../../controllers/load.controller');
 
 const router = express.Router();
 
-router.post('/load/create', (req, res) => {
+router.post('/loads', (req, res) => {
   loadController.create_load(req, res);
 });
 
-router.get('/load/all', (req, res) => {
+router.get('/loads', (req, res) => {
   loadController.get_loads(req, res);
 });
 
-router.put('/load/update', (req, res) => {
+router.put('/loads/:id', (req, res) => {
   loadController.update_load(req, res);
 });
 
-router.delete('/load/delete', (req, res) => {
+router.delete('/loads/:id', (req, res) => {
   loadController.delete_load(req, res);
 });
 
-router.put('/load/post', (req, res) => {
+router.patch('/loads/:id/post', (req, res) => {
   loadController.post_load(req, res);
 });
 
-router.get('/load/info', (req, res) => {
+router.get('/loads/:id/info', (req, res) => {
   loadController.get_load_info(req, res);
 });
 
-router.put('/load/process', (req, res) => {
+router.patch('/loads/:id/state', (req, res) => {
   loadController.change_load_state(req, res);
 });
 

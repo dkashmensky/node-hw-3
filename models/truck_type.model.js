@@ -11,21 +11,23 @@ const TruckTypeSchema = new Schema({
     type: String,
     required: true,
   },
-  length: {
+  payload: {
     type: Number,
     required: true,
   },
-  height: {
-    type: Number,
-    required: true,
-  },
-  width: {
-    type: Number,
-    required: true,
-  },
-  capacity: {
-    type: Number,
-    required: true,
+  dimensions: {
+    length: {
+      type: Number,
+      required: true,
+    },
+    height: {
+      type: Number,
+      required: true,
+    },
+    width: {
+      type: Number,
+      required: true,
+    },
   },
 });
 
